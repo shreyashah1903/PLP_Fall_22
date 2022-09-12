@@ -150,7 +150,7 @@ public class Lexer implements ILexer {
     }
 
     private void createToken(IToken.Kind kind, int pos, int len, int col) {
-        IToken token = new Token(kind, new IToken.SourceLocation(lineNum, col), chars, pos, len);
+        IToken token = new Token(kind, chars, pos, len, new IToken.SourceLocation(lineNum, col));
         System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input:"+String.valueOf(chars, pos, len));
 
         tokens.add(token);
