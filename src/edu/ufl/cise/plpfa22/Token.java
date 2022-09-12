@@ -22,7 +22,10 @@ public class Token implements IToken {
 
     @Override
     public char[] getText() {
-        return String.copyValueOf(input, position, len).toCharArray();
+        if (getKind() == Kind.STRING_LIT) {
+            return getStringValue().toCharArray();
+        }
+        else return String.copyValueOf(input, position, len).toCharArray();
     }
 
     @Override
@@ -45,6 +48,31 @@ public class Token implements IToken {
     @Override
     public String getStringValue() {
         assert getKind() == Kind.STRING_LIT;
-        return String.copyValueOf(input, position, len);
+
+        StringBuilder builder = new StringBuilder();
+        for(int i = position + 1; i < position + len - 1; i++) { // omit enclosing "
+            char c = input[i];
+
+            if (c == '\\') {
+                i++;
+                c = input[i];
+                switch (c) {
+                    case 'b' -> builder.append('\b');
+                    case 't' -> builder.append('\t');
+                    case 'n' -> builder.append('\n');
+                    case 'f' -> builder.append('\f');
+                    case 'r' -> builder.append('\r');
+                    case '\"' -> builder.append('\"');
+                    case '\'' -> builder.append('\'');
+                    case '\\' -> builder.append('\\');
+                    default -> {
+                        assert false;
+                    }
+                }
+            } else {
+                builder.append(c);
+            }
+        }
+        return builder.toString();
     }
 }

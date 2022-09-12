@@ -146,7 +146,7 @@ public class Lexer implements ILexer {
 
     private void createToken(IToken.Kind kind) {
         //TODO: Pass input, position, length
-        IToken token = new Token(kind, new String(), 0, 0, new IToken.SourceLocation(lineNum, colNum));
+        IToken token = new Token(kind, (new String()).toCharArray(), 0, 0, new IToken.SourceLocation(lineNum, colNum));
         tokens.add(token);
     }
 
