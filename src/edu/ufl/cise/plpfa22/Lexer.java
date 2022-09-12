@@ -33,7 +33,7 @@ public class Lexer implements ILexer {
         chars = Arrays.copyOf(input.toCharArray(), len + 1);
         chars[len] = EOF;
         if (input.isEmpty()) {
-            createToken(IToken.Kind.EOF);
+            createToken(IToken.Kind.EOF, 0, 0, colNum);
         } else {
             try {
                 handleInput(chars);
@@ -53,17 +53,17 @@ public class Lexer implements ILexer {
                 case START -> {
                     switch (ch) {
                         case '+' -> {
-                            createToken(IToken.Kind.PLUS);
+                            createToken(IToken.Kind.PLUS, startPos, 1, colNum);
                             startPos++;
                             colNum++;
                         }
                         case '-' -> {
-                            createToken(IToken.Kind.MINUS);
+                            createToken(IToken.Kind.MINUS, startPos, 1, colNum);
                             startPos++;
                             colNum++;
                         }
                         case '?' -> {
-                            createToken(IToken.Kind.QUESTION);
+                            createToken(IToken.Kind.QUESTION, startPos, 1, colNum);
                             startPos++;
                             colNum++;
                         }
@@ -103,8 +103,11 @@ public class Lexer implements ILexer {
                                         lineNum++;
                                         colNum = 1;
                                     }
+                                    case ' ' -> {
+                                        colNum++;
+                                    }
                                     case EOF -> {
-                                        createToken(IToken.Kind.EOF);
+                                        createToken(IToken.Kind.EOF, startPos, 0, colNum);
                                         startPos++;
                                         colNum++;
                                     }
@@ -121,13 +124,14 @@ public class Lexer implements ILexer {
                     while (Character.isDigit(chars[startPos])) {
                         startPos++;
                         colNum++;
+                        numDigits++;
                     }
-                    createToken(IToken.Kind.NUM_LIT);
                     try {
                         Integer.parseInt(String.valueOf(chars, startPos - numDigits, numDigits));
                     } catch (NumberFormatException e) {
                         throw new LexicalException("Number format exception at", lineNum, colNum - numDigits);
                     }
+                    createToken(IToken.Kind.NUM_LIT, startPos - numDigits, numDigits, colNum - numDigits);
                     state = State.START;
                 }
                 case IN_IDENT -> {
@@ -135,8 +139,9 @@ public class Lexer implements ILexer {
                     while (startPos < chars.length && (Character.isLetterOrDigit(chars[startPos]) || chars[startPos] == '$' || chars[startPos] == '_')) {
                         startPos++;
                         len++;
+                        colNum++;
                     }
-                    createToken(IToken.Kind.IDENT);
+                    createToken(IToken.Kind.IDENT, startPos - len, len, colNum - len);
                     state = State.START;
                 }
 
@@ -144,9 +149,10 @@ public class Lexer implements ILexer {
         }
     }
 
-    private void createToken(IToken.Kind kind) {
-        //TODO: Pass input, position, length
-        IToken token = new Token(kind, (new String()).toCharArray(), 0, 0, new IToken.SourceLocation(lineNum, colNum));
+    private void createToken(IToken.Kind kind, int pos, int len, int col) {
+        IToken token = new Token(kind, new IToken.SourceLocation(lineNum, col), chars, pos, len);
+        System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input:"+String.valueOf(chars, pos, len));
+
         tokens.add(token);
     }
 
