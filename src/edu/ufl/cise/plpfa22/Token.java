@@ -2,9 +2,11 @@ package edu.ufl.cise.plpfa22;
 
 public class Token implements IToken {
     private final Kind kind;
+    private final SourceLocation sourceLocation;
 
-    public Token(Kind kind) {
+    public Token(Kind kind, SourceLocation sourceLocation) {
         this.kind = kind;
+        this.sourceLocation = sourceLocation;
     }
 
     @Override
@@ -19,7 +21,7 @@ public class Token implements IToken {
 
     @Override
     public SourceLocation getSourceLocation() {
-        return null;
+        return sourceLocation;
     }
 
     @Override
