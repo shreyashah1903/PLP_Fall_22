@@ -19,6 +19,7 @@ public class Lexer implements ILexer {
     enum State {
         START,
         IN_IDENT,
+        IN_GT_OR_LT,
         HAVE_ZERO,
         HAVE_DOT,
         IN_FLOAT,
@@ -56,7 +57,31 @@ public class Lexer implements ILexer {
 //                            startPos++;
 //                            colNum++;
 //                        }
-
+                        case '.' -> {
+                            createToken(IToken.Kind.DOT, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
+                        case ',' -> {
+                            createToken(IToken.Kind.COMMA, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
+                        case ';' -> {
+                            createToken(IToken.Kind.SEMI, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
+                        case '(' -> {
+                            createToken(IToken.Kind.LPAREN, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
+                        case ')' -> {
+                            createToken(IToken.Kind.RPAREN, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
                         case '+' -> {
                             createToken(IToken.Kind.PLUS, startPos, 1, colNum);
                             startPos++;
@@ -67,19 +92,50 @@ public class Lexer implements ILexer {
                             startPos++;
                             colNum++;
                         }
+                        case '*' -> {
+                            createToken(IToken.Kind.TIMES, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
+                        case '/' -> {
+                            createToken(IToken.Kind.DIV, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
+                        case '%' -> {
+                            createToken(IToken.Kind.MOD, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
                         case '?' -> {
                             createToken(IToken.Kind.QUESTION, startPos, 1, colNum);
                             startPos++;
                             colNum++;
+                        }
+                        case '!' -> {
+                            createToken(IToken.Kind.BANG, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
+                        case ':' -> {
+                            startPos++;
+                            colNum++;
+                            if (chars[startPos] == '=') {
+                                createToken(IToken.Kind.ASSIGN, startPos - 1, 2, colNum - 1);
+                                startPos++;
+                                colNum++;
+                            } else {
+                                createToken(IToken.Kind.ERROR, startPos-1, 1, colNum-1);
+                            }
                         }
                         case '@' -> {
                             createToken(IToken.Kind.ERROR, startPos, 1, colNum);
                             colNum++;
                             startPos++;
                         }
-
                         case '=' -> {
-                            state = State.HAVE_EQ;
+                              createToken(IToken.Kind.EQ, startPos, 1, colNum);
+//                            state = State.HAVE_EQ;
 //
 //                            // TODO catch IOB Exception
 //                            if (chars[startPos + 1] == '=') {
@@ -89,6 +145,16 @@ public class Lexer implements ILexer {
 //                                createToken(IToken.Kind.ASSIGN);
 //                            }
 //                            startPos++;
+                            startPos++;
+                            colNum++;
+                        }
+                        case '#' -> {
+                            createToken(IToken.Kind.NEQ, startPos, 1, colNum);
+                            startPos++;
+                            colNum++;
+                        }
+                        case '<', '>' -> {
+                            state = State.IN_GT_OR_LT;
                             startPos++;
                             colNum++;
                         }
@@ -156,10 +222,23 @@ public class Lexer implements ILexer {
                     createToken(IToken.Kind.IDENT, startPos - len, len, colNum - len);
                     state = State.START;
                 }
+                case IN_GT_OR_LT -> {
+                    int len = 1;
+                    if (startPos < chars.length && chars[startPos] == '=') {
+                        len++;
+                        if (chars[startPos-1] == '>') createToken(IToken.Kind.GE, startPos-1, len, colNum-1);
+                        if (chars[startPos-1] == '<') createToken(IToken.Kind.LE, startPos-1, len, colNum-1);
+                        startPos++;
+                        colNum++;
+                    } else {
+                        if (chars[startPos - 1] == '>') createToken(IToken.Kind.GT, startPos - 1, len, colNum-1);
+                        if (chars[startPos - 1] == '<') createToken(IToken.Kind.LT, startPos - 1, len, colNum-1);
+                        state = state.START;
+                    }
+                }
                 case IN_STRING -> {
                     startPos++;
                 }
-
             }
         }
     }
