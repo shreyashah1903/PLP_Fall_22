@@ -6,13 +6,17 @@ public class Token implements IToken {
     private final int position;
     private final int len;
     private final SourceLocation sourceLocation;
+    private String errorMsg;
 
-    public Token(Kind kind, char[] input, int position, int len, SourceLocation sourceLocation) {
+    public Token(Kind kind, char[] input, int position, int len, SourceLocation sourceLocation, String... errorMsg) {
         this.kind = kind;
         this.input = input;
         this.position = position;
         this.len = len;
         this.sourceLocation = sourceLocation;
+        if (errorMsg.length > 0) {
+            this.errorMsg = errorMsg[0];
+        }
     }
 
     @Override
@@ -22,8 +26,12 @@ public class Token implements IToken {
 
     @Override
     public char[] getText() {
-        if (getKind() == Kind.STRING_LIT) {
+        Kind kind = getKind();
+        if (kind == Kind.STRING_LIT) {
             return getStringValue().toCharArray();
+        }
+        else if (kind == Kind.ERROR) {
+            return errorMsg.toCharArray();
         }
         else return String.copyValueOf(input, position, len).toCharArray();
     }

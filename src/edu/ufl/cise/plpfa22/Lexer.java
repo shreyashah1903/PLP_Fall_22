@@ -149,7 +149,7 @@ public class Lexer implements ILexer {
                             }
                         }
                         case '@' -> {
-                            createToken(IToken.Kind.ERROR, startPos, 1, colNum);
+                            createToken(IToken.Kind.ERROR, startPos, 1, colNum, "Invalid character:"+ch);
                             colNum++;
                             startPos++;
                         }
@@ -213,8 +213,10 @@ public class Lexer implements ILexer {
                                 colNum++;
                             }
                             else {
-                                createToken(IToken.Kind.ERROR, startPos, 1, colNum);
-                                throw new LexicalException("Invalid character.", lineNum, colNum);
+                                createToken(IToken.Kind.ERROR, startPos, 1, colNum, "Invalid character:"+ch);
+                                startPos++;
+                                colNum++;
+//                                throw new LexicalException("Invalid character.", lineNum, colNum);
                             }
                         }
                     }
@@ -232,8 +234,8 @@ public class Lexer implements ILexer {
                     try {
                         Integer.parseInt(String.valueOf(chars, startPos - numDigits, numDigits));
                     } catch (NumberFormatException e) {
-                        createToken(IToken.Kind.ERROR, startPos - numDigits, numDigits, colNum);
-                        throw new LexicalException("Number format exception.", lineNum, colNum - numDigits);
+                        createToken(IToken.Kind.ERROR, startPos - numDigits, numDigits, colNum, "Number format exception trying to parse"+Arrays.toString(chars));
+//                        throw new LexicalException("Number format exception.", lineNum, colNum - numDigits);
                     }
                     createToken(IToken.Kind.NUM_LIT, startPos - numDigits, numDigits, colNum - numDigits);
                     state = State.START;
@@ -248,13 +250,18 @@ public class Lexer implements ILexer {
                     String token = String.copyValueOf(chars, startPos-len, len);
                     if (reservedWords.containsKey(token)) {
                         createToken(reservedWords.get(token), startPos - len, len, colNum - len);
-                    } else {
+                    }
+                    else if (token.equalsIgnoreCase("true") || token.equalsIgnoreCase("false")) {
+                        createToken(IToken.Kind.BOOLEAN_LIT, startPos - len, len, colNum - len);
+                    }
+                    else {
                         createToken(IToken.Kind.IDENT, startPos - len, len, colNum - len);
                     }
                     state = State.START;
                 }
                 case IN_STRING -> {
                     int len = 1;
+                    int line = lineNum;
                     while (startPos < chars.length) {
                        ch = chars[startPos];
                        if (ch == '\\') {
@@ -262,7 +269,7 @@ public class Lexer implements ILexer {
                            len++;
                            if (chars[startPos] == 'n') {
                                len++;
-                               lineNum++;
+                               line++;
                                colNum++;
                            }
                            else if (allowedStringLit.contains(chars[startPos])) {
@@ -273,10 +280,16 @@ public class Lexer implements ILexer {
                                createToken(IToken.Kind.ERROR, startPos, len, colNum);
                            }
                        }
+                       else if (ch == '"') {
+                           startPos++;
+                           break;
+                       }
                         len++;
                         startPos++;
+                        colNum++;
                     }
-                    createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - startPos);
+                    createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - len + 1);
+                    lineNum = line;
                     state = State.START;
                 }
                 case HAVE_EQ -> {
@@ -321,8 +334,8 @@ public class Lexer implements ILexer {
         }
     }
 
-    private void createToken(IToken.Kind kind, int pos, int len, int col) {
-        IToken token = new Token(kind, chars, pos, len, new IToken.SourceLocation(lineNum, col));
+    private void createToken(IToken.Kind kind, int pos, int len, int col, String... errorMsg) {
+        IToken token = new Token(kind, chars, pos, len, new IToken.SourceLocation(lineNum, col), errorMsg);
         System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input "+String.valueOf(chars, pos, len));
 
         tokens.add(token);
@@ -336,7 +349,7 @@ public class Lexer implements ILexer {
 
         Token token = (Token) tokens.get(tokenPos++);
         if (token.getKind() == IToken.Kind.ERROR) {
-            throw new LexicalException("Token "+ Arrays.toString(token.getText()) + " not allowed");
+            throw new LexicalException(String.valueOf(token.getText()));
         }
         return token;
     }
@@ -349,7 +362,7 @@ public class Lexer implements ILexer {
 
         Token token = (Token) tokens.get(tokenPos);
         if (token.getKind() == IToken.Kind.ERROR) {
-            throw new LexicalException("Token "+ Arrays.toString(token.getText()) + " not allowed");
+            throw new LexicalException(String.valueOf(token.getText()));
         }
         return token;
     }
