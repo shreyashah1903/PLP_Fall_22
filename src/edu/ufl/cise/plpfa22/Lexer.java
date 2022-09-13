@@ -10,6 +10,7 @@ public class Lexer implements ILexer {
     private int colNum = 1;
     private State state = State.START;
     private List<IToken> tokens = new ArrayList<>();
+    public HashMap<String, IToken.Kind> reservedWords = new HashMap<String, IToken.Kind>();
 
     private final char EOF = '\0';
 
@@ -38,6 +39,7 @@ public class Lexer implements ILexer {
         int len = input.length();
         chars = Arrays.copyOf(input.toCharArray(), len + 1);
         chars[len] = EOF;
+        addReservedWords();
         if (input.isEmpty()) {
             createToken(IToken.Kind.EOF, 0, 0, colNum);
         } else {
@@ -47,6 +49,19 @@ public class Lexer implements ILexer {
                 System.out.println(e.getMessage());
             }
         }
+    }
+
+    private void addReservedWords() {
+        reservedWords.put("CONST", IToken.Kind.KW_CONST);
+        reservedWords.put("VAR", IToken.Kind.KW_VAR);
+        reservedWords.put("PROCEDURE", IToken.Kind.KW_PROCEDURE);
+        reservedWords.put("CALL", IToken.Kind.KW_CALL);
+        reservedWords.put("BEGIN", IToken.Kind.KW_BEGIN);
+        reservedWords.put("END", IToken.Kind.KW_END);
+        reservedWords.put("IF", IToken.Kind.KW_IF);
+        reservedWords.put("THEN", IToken.Kind.KW_THEN);
+        reservedWords.put("WHILE", IToken.Kind.KW_WHILE);
+        reservedWords.put("DO", IToken.Kind.KW_DO);
     }
 
 
@@ -230,7 +245,12 @@ public class Lexer implements ILexer {
                         len++;
                         colNum++;
                     }
-                    createToken(IToken.Kind.IDENT, startPos - len, len, colNum - len);
+                    String token = String.copyValueOf(chars, startPos-len, len);
+                    if (reservedWords.containsKey(token)) {
+                        createToken(reservedWords.get(token), startPos - len, len, colNum - len);
+                    } else {
+                        createToken(IToken.Kind.IDENT, startPos - len, len, colNum - len);
+                    }
                     state = State.START;
                 }
                 case IN_STRING -> {
