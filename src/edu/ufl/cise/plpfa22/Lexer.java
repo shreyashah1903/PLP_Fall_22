@@ -285,28 +285,24 @@ public class Lexer implements ILexer {
                     createToken(IToken.Kind.EQ, startPos - 2, 2, colNum - 2);
                 }
                 case HAVE_LT -> {
-                    System.out.println("Char at HV_LT:"+chars[startPos] + " ch:"+ch);
-                    if (ch == '=') {
+                    if (chars[startPos] == '=') {
                         createToken(IToken.Kind.LE, startPos - 1, 2, colNum - 1);
+                        startPos++;
+                        colNum++;
                     }
                     else {
-                        createToken(IToken.Kind.LT, startPos - 1, 2, colNum - 1);
+                        createToken(IToken.Kind.LT, startPos - 1, 1, colNum - 1);
                     }
-                    if (chars[startPos - 1] == '<') {
-                        createToken(IToken.Kind.LT, startPos - 1, 2, colNum - 1);
-                    }
-                    startPos++;
-                    colNum++;
                     state = State.START;
                 }
                 case HAVE_GT -> {
-                    startPos++;
-                    colNum++;
-                    if (ch == '=') {
-                        createToken(IToken.Kind.GE, startPos - 2, 2, colNum - 2);
+                    if (chars[startPos] == '=') {
+                        createToken(IToken.Kind.GE, startPos - 1, 2, colNum - 1);
+                        startPos++;
+                        colNum++;
                     }
                     else {
-                        createToken(IToken.Kind.GT, startPos - 2, 2, colNum - 2);
+                        createToken(IToken.Kind.GT, startPos - 1, 1, colNum - 1);
                     }
                     state = State.START;
                 }
