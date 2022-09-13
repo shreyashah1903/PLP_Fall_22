@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Lexer implements ILexer {
     private int startPos;
-    private int tokenPos;
+    private int tokenPos = 0;
 
     private int lineNum = 1;
     private int colNum = 1;
@@ -136,10 +136,12 @@ public class Lexer implements ILexer {
                         colNum++;
                         numDigits++;
                     }
+                    System.out.println(numDigits);
                     try {
                         Integer.parseInt(String.valueOf(chars, startPos - numDigits, numDigits));
                     } catch (NumberFormatException e) {
-                        throw new LexicalException("Number format exception at", lineNum, colNum - numDigits);
+                        createToken(IToken.Kind.ERROR, startPos - numDigits, numDigits, colNum);
+                        throw new LexicalException("Number format exception.", lineNum, colNum - numDigits);
                     }
                     createToken(IToken.Kind.NUM_LIT, startPos - numDigits, numDigits, colNum - numDigits);
                     state = State.START;
@@ -171,7 +173,7 @@ public class Lexer implements ILexer {
 
     @Override
     public IToken next() throws LexicalException {
-        if (tokenPos > tokens.size()) {
+        if (tokenPos >= tokens.size()) {
             throw new IndexOutOfBoundsException();
         }
 
@@ -184,7 +186,7 @@ public class Lexer implements ILexer {
 
     @Override
     public IToken peek() throws LexicalException {
-        if (tokenPos > tokens.size()) {
+        if (tokenPos >= tokens.size()) {
             throw new IndexOutOfBoundsException();
         }
 
