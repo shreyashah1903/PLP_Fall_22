@@ -418,8 +418,8 @@ class LexerTest {
                 """;
         show(input);
         ILexer lexer = getLexer(input);
-        checkToken(lexer.next(), Kind.KW_DO, 1, 1);
-        checkToken(lexer.next(), Kind.KW_WHILE, 1, 3);
+        // CHANGED: As mentioned on Slack.
+        checkToken(lexer.next(), Kind.IDENT, 1, 1);
         checkEOF(lexer.next());
     }
 
