@@ -257,7 +257,8 @@ class LexerTest {
 
     //Test 4
     //. , ; ( ) + - * / % ? ! := = # < <= > >=
-    //@Test
+    // FIXME: Inconsistent. Fails sometimes
+    @Test
     public void testAllSymmbols() throws LexicalException {
         String input = """
                 . , ; ( ) + - * / %
@@ -354,6 +355,7 @@ class LexerTest {
     }
 
     //Test 8
+    // FIXME: Inconsistent. Fails sometimes
     @Test
     void testAllChars() throws LexicalException {
         String input = """
