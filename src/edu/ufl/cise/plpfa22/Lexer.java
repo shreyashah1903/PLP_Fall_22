@@ -52,6 +52,11 @@ public class Lexer implements ILexer {
             switch (state) {
                 case START -> {
                     switch (ch) {
+//                        case ' ', '\t', '\n', '\r' -> {
+//                            startPos++;
+//                            colNum++;
+//                        }
+
                         case '+' -> {
                             createToken(IToken.Kind.PLUS, startPos, 1, colNum);
                             startPos++;
@@ -66,6 +71,11 @@ public class Lexer implements ILexer {
                             createToken(IToken.Kind.QUESTION, startPos, 1, colNum);
                             startPos++;
                             colNum++;
+                        }
+                        case '@' -> {
+                            createToken(IToken.Kind.ERROR, startPos, 1, colNum);
+                            colNum++;
+                            startPos++;
                         }
 
                         case '=' -> {
@@ -144,6 +154,9 @@ public class Lexer implements ILexer {
                     createToken(IToken.Kind.IDENT, startPos - len, len, colNum - len);
                     state = State.START;
                 }
+                case IN_STRING -> {
+                    startPos++;
+                }
 
             }
         }
@@ -158,11 +171,27 @@ public class Lexer implements ILexer {
 
     @Override
     public IToken next() throws LexicalException {
-        return tokens.remove(tokenPos);
+        if (tokenPos > tokens.size()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Token token = (Token) tokens.get(tokenPos++);
+        if (token.getKind() == IToken.Kind.ERROR) {
+            throw new LexicalException("Token "+ Arrays.toString(token.getText()) + " not allowed");
+        }
+        return token;
     }
 
     @Override
     public IToken peek() throws LexicalException {
-        return tokens.get(tokenPos);
+        if (tokenPos > tokens.size()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Token token = (Token) tokens.get(tokenPos);
+        if (token.getKind() == IToken.Kind.ERROR) {
+            throw new LexicalException("Token "+ Arrays.toString(token.getText()) + " not allowed");
+        }
+        return token;
     }
 }
