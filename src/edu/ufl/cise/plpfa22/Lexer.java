@@ -222,7 +222,8 @@ public class Lexer implements ILexer {
                                 startPos++;
                                 colNum++;
                             } else if (Character.isDigit(ch)) {
-                                state = State.IN_NUM;
+                                if (ch == '0') createToken(IToken.Kind.NUM_LIT, startPos, 1, colNum);
+                                else state = State.IN_NUM;
                                 startPos++;
                                 colNum++;
                             }
