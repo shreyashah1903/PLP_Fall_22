@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Lexer implements ILexer {
     private int startPos;
-    private int tokenPos = 0;
+    private int tokenPos;
 
     private int lineNum = 1;
     private int colNum = 1;
@@ -14,6 +14,8 @@ public class Lexer implements ILexer {
     private final char EOF = '\0';
 
     private final char[] chars;
+
+    private final List<Character> allowedStringLit = Arrays.asList('b', 't', 'n', 'f', 'r', '\"', '\'', '\\');
 
 
     enum State {
@@ -26,7 +28,10 @@ public class Lexer implements ILexer {
         IN_NUM,
         IN_STRING,
         HAVE_EQ,
-        HAVE_MINUS
+        HAVE_MINUS,
+        HAVE_GT,
+        HAVE_LT,
+        HAVE_ASSIGN
     }
 
     public Lexer(String input) {
@@ -153,8 +158,13 @@ public class Lexer implements ILexer {
                             startPos++;
                             colNum++;
                         }
-                        case '<', '>' -> {
-                            state = State.IN_GT_OR_LT;
+                        case '<' -> {
+                            state = State.HAVE_LT;
+                            startPos++;
+                            colNum++;
+                        }
+                        case '>' -> {
+                            state = State.HAVE_GT;
                             startPos++;
                             colNum++;
                         }
@@ -223,22 +233,73 @@ public class Lexer implements ILexer {
                     createToken(IToken.Kind.IDENT, startPos - len, len, colNum - len);
                     state = State.START;
                 }
-                case IN_GT_OR_LT -> {
-                    int len = 1;
-                    if (startPos < chars.length && chars[startPos] == '=') {
-                        len++;
-                        if (chars[startPos-1] == '>') createToken(IToken.Kind.GE, startPos-1, len, colNum-1);
-                        if (chars[startPos-1] == '<') createToken(IToken.Kind.LE, startPos-1, len, colNum-1);
-                        startPos++;
-                        colNum++;
-                    } else {
-                        if (chars[startPos - 1] == '>') createToken(IToken.Kind.GT, startPos - 1, len, colNum-1);
-                        if (chars[startPos - 1] == '<') createToken(IToken.Kind.LT, startPos - 1, len, colNum-1);
-                        state = state.START;
-                    }
-                }
                 case IN_STRING -> {
+                    int len = 1;
+                    while (startPos < chars.length) {
+                       ch = chars[startPos];
+                       if (ch == '\\') {
+                           startPos++;
+                           len++;
+                           if (chars[startPos] == 'n') {
+                               len++;
+                               lineNum++;
+                               colNum++;
+                           }
+                           else if (allowedStringLit.contains(chars[startPos])) {
+                               len++;
+                               colNum++;
+                           }
+                           else {
+                               createToken(IToken.Kind.ERROR, startPos, len, colNum);
+                           }
+                       }
+                        len++;
+                        startPos++;
+                    }
+                    createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - startPos);
+                    state = State.START;
+                }
+                case HAVE_EQ -> {
                     startPos++;
+                    colNum++;
+                    createToken(IToken.Kind.EQ, startPos - 2, 2, colNum - 2);
+                }
+                case HAVE_LT -> {
+                    System.out.println("Char at HV_LT:"+chars[startPos] + " ch:"+ch);
+                    if (ch == '=') {
+                        createToken(IToken.Kind.LE, startPos - 1, 2, colNum - 1);
+                    }
+                    else {
+                        createToken(IToken.Kind.LT, startPos - 1, 2, colNum - 1);
+                    }
+                    if (chars[startPos - 1] == '<') {
+                        createToken(IToken.Kind.LT, startPos - 1, 2, colNum - 1);
+                    }
+                    startPos++;
+                    colNum++;
+                    state = State.START;
+                }
+                case HAVE_GT -> {
+                    startPos++;
+                    colNum++;
+                    if (ch == '=') {
+                        createToken(IToken.Kind.GE, startPos - 2, 2, colNum - 2);
+                    }
+                    else {
+                        createToken(IToken.Kind.GT, startPos - 2, 2, colNum - 2);
+                    }
+                    state = State.START;
+                }
+                case HAVE_ASSIGN -> {
+                    startPos++;
+                    colNum++;
+                    if (ch == '=') {
+                        createToken(IToken.Kind.ASSIGN, startPos - 2, 2, colNum - 2);
+                    }
+                    else {
+                        createToken(IToken.Kind.ERROR, startPos - 2, 2, colNum - 2);
+                    }
+                    state = State.START;
                 }
             }
         }
@@ -246,7 +307,7 @@ public class Lexer implements ILexer {
 
     private void createToken(IToken.Kind kind, int pos, int len, int col) {
         IToken token = new Token(kind, chars, pos, len, new IToken.SourceLocation(lineNum, col));
-        System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input:"+String.valueOf(chars, pos, len));
+        System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input "+String.valueOf(chars, pos, len));
 
         tokens.add(token);
     }
