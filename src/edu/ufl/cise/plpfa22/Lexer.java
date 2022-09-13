@@ -158,6 +158,25 @@ public class Lexer implements ILexer {
                             startPos++;
                             colNum++;
                         }
+                        case '"' -> {
+                            state = State.IN_STRING;
+                            startPos++;
+                            colNum++;
+                        }
+                        case '\n' -> {
+                            lineNum++;
+                            startPos++;
+                            colNum = 1;
+                        }
+                        case ' ' -> {
+                            startPos++;
+                            colNum++;
+                        }
+                        case EOF -> {
+                            createToken(IToken.Kind.EOF, startPos, 0, colNum);
+                            startPos++;
+                            colNum++;
+                        }
                         default -> {
                             if (Character.isJavaIdentifierStart(ch)) {
                                 state = State.IN_IDENT;
@@ -169,26 +188,8 @@ public class Lexer implements ILexer {
                                 colNum++;
                             }
                             else {
-                                switch (ch) {
-                                    case '"' -> {
-                                        state = State.IN_STRING;
-                                        startPos++;
-                                        colNum++;
-                                    }
-                                    case '\n' -> {
-                                        lineNum++;
-                                        colNum = 1;
-                                    }
-                                    case ' ' -> {
-                                        colNum++;
-                                    }
-                                    case EOF -> {
-                                        createToken(IToken.Kind.EOF, startPos, 0, colNum);
-                                        startPos++;
-                                        colNum++;
-                                    }
-                                }
-                                startPos++;
+                                createToken(IToken.Kind.ERROR, startPos, 1, colNum);
+                                throw new LexicalException("Invalid character.", lineNum, colNum);
                             }
                         }
                     }
@@ -214,7 +215,7 @@ public class Lexer implements ILexer {
                 }
                 case IN_IDENT -> {
                     int len = 1;
-                    while (startPos < chars.length && (Character.isLetterOrDigit(chars[startPos]) || chars[startPos] == '$' || chars[startPos] == '_')) {
+                    while (startPos < chars.length && (Character.isJavaIdentifierStart(chars[startPos]) || Character.isDigit(chars[startPos]))) {
                         startPos++;
                         len++;
                         colNum++;
