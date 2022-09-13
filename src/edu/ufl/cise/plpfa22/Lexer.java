@@ -168,17 +168,7 @@ public class Lexer implements ILexer {
                             startPos++;
                         }
                         case '=' -> {
-                              createToken(IToken.Kind.EQ, startPos, 1, colNum);
-//                            state = State.HAVE_EQ;
-//
-//                            // TODO catch IOB Exception
-//                            if (chars[startPos + 1] == '=') {
-//                                createToken(IToken.Kind.EQ);
-//                            }
-//                            else {
-//                                createToken(IToken.Kind.ASSIGN);
-//                            }
-//                            startPos++;
+                            createToken(IToken.Kind.EQ, startPos, 1, colNum);
                             startPos++;
                             colNum++;
                         }
@@ -354,7 +344,7 @@ public class Lexer implements ILexer {
 
     private void createToken(IToken.Kind kind, int pos, int len, int col, String... errorMsg) {
         IToken token = new Token(kind, chars, pos, len, new IToken.SourceLocation(lineNum, col), errorMsg);
-        System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input "+String.valueOf(chars, pos, len) + "lineNum:"+lineNum);
+        System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input = "+String.valueOf(chars, pos, len) + ", lineNum = "+lineNum);
 
         tokens.add(token);
     }
