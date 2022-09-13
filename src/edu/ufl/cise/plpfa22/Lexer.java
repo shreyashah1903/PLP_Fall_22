@@ -118,9 +118,23 @@ public class Lexer implements ILexer {
                             colNum++;
                         }
                         case '/' -> {
-                            createToken(IToken.Kind.DIV, startPos, 1, colNum);
                             startPos++;
                             colNum++;
+                            if(startPos < chars.length && chars[startPos] == '/') {
+                                startPos++;
+                                colNum++;
+                                while(startPos < chars.length && (chars[startPos] != '\r' && chars[startPos] != '\n' && chars[startPos] != EOF)) {
+                                    startPos++;
+                                    colNum++;
+                                }
+                                if (chars[startPos] == '\r' && chars[startPos+1] == '\n') {
+                                    colNum += 2;
+                                    startPos +=2;
+                                    lineNum++;
+                                }
+                            } else {
+                                createToken(IToken.Kind.DIV, startPos-1, 1, colNum-1);
+                            }
                         }
                         case '%' -> {
                             createToken(IToken.Kind.MOD, startPos, 1, colNum);
