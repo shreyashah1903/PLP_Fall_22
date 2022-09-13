@@ -299,15 +299,16 @@ public class Lexer implements ILexer {
                        else if (ch == '"') {
                            startPos++;
                            colNum++;
+                           state = State.START;
                            break;
                        }
                         len++;
                         startPos++;
                         colNum++;
                     }
-                    createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - len - 1);
+                    if (state != State.START) createToken(IToken.Kind.ERROR, startPos - len, len, colNum - len - 1, "Unterminated String.");
+                    else createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - len - 1);
                     lineNum = line;
-                    state = State.START;
                 }
                 case HAVE_EQ -> {
                     startPos++;
