@@ -9,8 +9,8 @@ public class Lexer implements ILexer {
     private int lineNum = 1;
     private int colNum = 1;
     private State state = State.START;
-    private List<IToken> tokens = new ArrayList<>();
-    public HashMap<String, IToken.Kind> reservedWords = new HashMap<String, IToken.Kind>();
+    private final List<IToken> tokens = new ArrayList<>();
+    public HashMap<String, IToken.Kind> reservedWords = new HashMap<>();
 
     private final char EOF = '\0';
 
@@ -276,28 +276,40 @@ public class Lexer implements ILexer {
                            if (chars[startPos] == 'n') {
                                len++;
                                line++;
+                               startPos++;
                                colNum++;
                            }
                            else if (allowedStringLit.contains(chars[startPos])) {
                                len++;
+                               startPos++;
                                colNum++;
                            }
                            else {
                                createToken(IToken.Kind.ERROR, startPos, len, colNum);
+                               startPos++;
+                               colNum++;
                            }
                        }
                        else if (ch == '"') {
                            startPos++;
                            colNum++;
+                           len++;
                            state = State.START;
                            break;
                        }
-                        len++;
-                        startPos++;
-                        colNum++;
+                       else {
+                           len++;
+                           startPos++;
+                           colNum++;
+                           //line = ch == '\n' ? lineNum++ : lineNum;
+                       }
                     }
-                    if (state != State.START) createToken(IToken.Kind.ERROR, startPos - len, len, colNum - len - 1, "Unterminated String.");
-                    else createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - len - 1);
+                    if (state != State.START) {
+                        createToken(IToken.Kind.ERROR, startPos - len, len, colNum - len - 1, "Unterminated String.");
+                    }
+                    else {
+                        createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - len);
+                    }
                     lineNum = line;
                 }
                 case HAVE_EQ -> {
@@ -344,7 +356,8 @@ public class Lexer implements ILexer {
 
     private void createToken(IToken.Kind kind, int pos, int len, int col, String... errorMsg) {
         IToken token = new Token(kind, chars, pos, len, new IToken.SourceLocation(lineNum, col), errorMsg);
-        System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input = "+String.valueOf(chars, pos, len) + ", lineNum = "+lineNum);
+        System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input = "+String.valueOf(chars, pos, len)
+                + ", lineNum = "+lineNum + " col:"+col);
 
         tokens.add(token);
     }

@@ -27,13 +27,14 @@ public class Token implements IToken {
     @Override
     public char[] getText() {
         Kind kind = getKind();
+        char[] chars = String.copyValueOf(input, position, len).toCharArray();
         if (kind == Kind.STRING_LIT) {
-            return getStringValue().toCharArray();
+            return chars;
         }
         else if (kind == Kind.ERROR) {
             return errorMsg == null ? "Error.".toCharArray() : errorMsg.toCharArray();
         }
-        else return String.copyValueOf(input, position, len).toCharArray();
+        else return chars;
     }
 
     @Override
