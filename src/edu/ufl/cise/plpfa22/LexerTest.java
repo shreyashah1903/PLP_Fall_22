@@ -204,6 +204,12 @@ class LexerTest {
         assertEquals(expectedText, text);
     }
 
+
+    /**
+     *
+     * Beginning of added tests. Could be incorrect.
+     */
+
     // Added from Google doc.
     //Test 1
     //identifier.
@@ -223,6 +229,12 @@ class LexerTest {
     void checkBoolean(IToken t, boolean expectedValue) {
         assertEquals(Kind.BOOLEAN_LIT, t.getKind());
         assertEquals(expectedValue, t.getBooleanValue());
+    }
+
+    void checkBoolean(IToken t, boolean expectedValue, int expectedLine, int expectedColumn) {
+        assertEquals(Kind.BOOLEAN_LIT, t.getKind());
+        assertEquals(expectedValue, t.getBooleanValue());
+        assertEquals(new IToken.SourceLocation(expectedLine, expectedColumn), t.getSourceLocation());
     }
 
     @Test
@@ -352,7 +364,9 @@ class LexerTest {
         ILexer lexer = getLexer(input);
         // escape char within string affects line number
         checkString(lexer.next(), "Hello\nWorld", 1, 1);
-        checkString(lexer.next(), "Hello\tAgain", 3, 1);
+        // NOTE : Incorrect as per Slack discussion \\n shouldn't be considered as newline.
+        // Changed expected line 3->2
+        checkString(lexer.next(), "Hello\tAgain", 2, 1);
         checkEOF(lexer.next());
     }
 
@@ -497,7 +511,7 @@ class LexerTest {
         checkToken(lexer.next(), Kind.KW_VAR, 2, 1);
         checkIdent(lexer.next(), "y", 2, 5);
         checkToken(lexer.next(), Kind.EQ, 2, 7);
-//        checkBoolean(lexer.next(), true);
+        checkBoolean(lexer.next(), true, 2, 9);
         checkToken(lexer.next(), Kind.SEMI, 2, 13);
 
         checkToken(lexer.next(), Kind.KW_VAR, 3, 1);

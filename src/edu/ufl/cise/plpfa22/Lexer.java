@@ -265,6 +265,7 @@ public class Lexer implements ILexer {
                     state = State.START;
                 }
                 case IN_STRING -> {
+                    // TODO Put String handling in a new function for readability
                     int len = 1;
                     int line = lineNum;
                     while (startPos < chars.length) {
@@ -273,13 +274,7 @@ public class Lexer implements ILexer {
                            startPos++;
                            colNum++;
                            len++;
-                           if (chars[startPos] == 'n') {
-                               len++;
-                               line++;
-                               startPos++;
-                               colNum++;
-                           }
-                           else if (allowedStringLit.contains(chars[startPos])) {
+                           if (allowedStringLit.contains(chars[startPos])) {
                                len++;
                                startPos++;
                                colNum++;
@@ -301,7 +296,8 @@ public class Lexer implements ILexer {
                            len++;
                            startPos++;
                            colNum++;
-                           //line = ch == '\n' ? lineNum++ : lineNum;
+                           // \n within a "" counts as a new line and not \\n
+                           line = ch == '\n' ? lineNum + 1 : lineNum;
                        }
                     }
                     if (state != State.START) {
