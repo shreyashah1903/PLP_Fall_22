@@ -31,7 +31,7 @@ public class Token implements IToken {
             return getStringValue().toCharArray();
         }
         else if (kind == Kind.ERROR) {
-            return errorMsg.toCharArray();
+            return errorMsg == null ? "Error.".toCharArray() : errorMsg.toCharArray();
         }
         else return String.copyValueOf(input, position, len).toCharArray();
     }
