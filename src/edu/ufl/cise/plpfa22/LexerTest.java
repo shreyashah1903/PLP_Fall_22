@@ -1,4 +1,5 @@
-package edu.ufl.cise.plpfa22; /**
+package edu.ufl.cise.plpfa22;
+/**
  * This code is provided for solely for use of students in the course COP5556 Programming Language Principles at the
  * University of Florida during the Fall Semester 2022 as part of the course project.  No other use is authorized.
  */
@@ -169,9 +170,7 @@ class LexerTest {
                 """;
         ILexer lexer = getLexer(input);
         checkInt(lexer.next(), 42);
-        Exception e = assertThrows(LexicalException.class, () -> {
-            lexer.next();
-        });
+        assertThrows(LexicalException.class, () -> lexer.next());
     }
 
 
@@ -537,8 +536,64 @@ class LexerTest {
         checkEOF(lexer.next());
     }
 
+    // Test 16
+    // colon cannot be followed by anything but = sign
+    @Test
+    void testColon() throws LexicalException {
+        String input = """
+        foo
+        :bar
+                """;
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkIdent(lexer.next(), "foo");
+        assertThrows(LexicalException.class, () -> {
+            @SuppressWarnings("unused")
+            IToken token = lexer.next();
+        });
+    }
+
+    //Test 17
+    //to test correct function of newline in string
+    @Test
+    void stringSpaces() throws LexicalException
+    {
+
+        String input = """
+   			 "Line 1 \n"
+   			 "Line 3 \\n"
+   			 "Line 4"
+   			 "Column\t""Column\\t"abc
+   			 """;
 
 
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkToken(lexer.next(), Kind.STRING_LIT, 1,1);
+        checkToken(lexer.next(), Kind.STRING_LIT, 3,1);
+        checkToken(lexer.next(), Kind.STRING_LIT, 4,1);
+        checkToken(lexer.next(), Kind.STRING_LIT, 5,1);
+        checkToken(lexer.next(), Kind.STRING_LIT, 5,10);
+        checkToken(lexer.next(), Kind.IDENT, 5,20);
+    }
+
+
+    //Test 18
+    @Test
+    void testIncompleteAssign() throws LexicalException {
+        String input = """
+                .,;:
+                """;
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkToken(lexer.next(), Kind.DOT, 1, 1);
+        checkToken(lexer.next(), Kind.COMMA, 1, 2);
+        checkToken(lexer.next(), Kind.SEMI, 1, 3);
+        assertThrows(LexicalException.class, () -> {
+            lexer.next();
+        });
+        checkEOF(lexer.next());
+    }
 }
 
 
