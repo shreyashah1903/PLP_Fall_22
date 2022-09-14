@@ -22,14 +22,9 @@ public class Lexer implements ILexer {
     enum State {
         START,
         IN_IDENT,
-        IN_GT_OR_LT,
-        HAVE_ZERO,
-        HAVE_DOT,
-        IN_FLOAT,
         IN_NUM,
         IN_STRING,
         HAVE_EQ,
-        HAVE_MINUS,
         HAVE_GT,
         HAVE_LT,
         HAVE_ASSIGN
@@ -73,10 +68,6 @@ public class Lexer implements ILexer {
             switch (state) {
                 case START -> {
                     switch (ch) {
-//                        case ' ', '\t', '\n', '\r' -> {
-//                            startPos++;
-//                            colNum++;
-//                        }
                         case '.' -> {
                             createToken(IToken.Kind.DOT, startPos, 1, colNum);
                             startPos++;
@@ -276,14 +267,12 @@ public class Lexer implements ILexer {
                            len++;
                            if (allowedStringLit.contains(chars[startPos])) {
                                len++;
-                               startPos++;
-                               colNum++;
                            }
                            else {
                                createToken(IToken.Kind.ERROR, startPos, len, colNum);
-                               startPos++;
-                               colNum++;
                            }
+                           startPos++;
+                           colNum++;
                        }
                        else if (ch == '"') {
                            startPos++;
