@@ -188,9 +188,18 @@ public class Lexer implements ILexer {
                             startPos++;
                             colNum = 1;
                         }
-                        case ' ' -> {
+                        case '\t', ' ' -> {
                             startPos++;
                             colNum++;
+                        }
+                        case '\r' -> {
+                            startPos++;
+                            colNum++;
+                            if (startPos < chars.length && chars[startPos] == '\n') {
+                                lineNum++;
+                                startPos++;
+                                colNum = 1;
+                            }
                         }
                         case EOF -> {
                             createToken(IToken.Kind.EOF, startPos, 0, colNum);
@@ -230,7 +239,7 @@ public class Lexer implements ILexer {
                     try {
                         Integer.parseInt(String.valueOf(chars, startPos - numDigits, numDigits));
                     } catch (NumberFormatException e) {
-                        createToken(IToken.Kind.ERROR, startPos - numDigits, numDigits, colNum, "Number format exception trying to parse"+Arrays.toString(chars));
+                        createToken(IToken.Kind.ERROR, startPos - numDigits, numDigits, colNum, "Number format exception trying to parse: "+Arrays.toString(chars));
 //                        throw new LexicalException("Number format exception.", lineNum, colNum - numDigits);
                     }
                     createToken(IToken.Kind.NUM_LIT, startPos - numDigits, numDigits, colNum - numDigits);
