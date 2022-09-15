@@ -19,7 +19,7 @@ class LexerTest {
     }
 
     //makes it easy to turn output on and off (and less typing than System.out.println)
-    static final boolean VERBOSE = true;
+    static final boolean VERBOSE = false;
 
     void show(Object obj) {
         if (VERBOSE) {
@@ -214,7 +214,7 @@ class LexerTest {
         assertEquals(expectedStringValue, val);
         String text = String.valueOf(t.getText());
         String expectedText = "\"\\b \\t \\n \\f \\r \"";
-        System.out.println("Expected text len:"+expectedText.length() + " actualTextLen:"+text.length());
+        show("Expected text len:"+expectedText.length() + " actualTextLen:"+text.length());
         assertEquals(expectedText, text);
     }
 
@@ -226,7 +226,7 @@ class LexerTest {
         IToken t = lexer.next();
         String val = t.getStringValue();
         String expectedStringValue = " ...  \"  \'  \\  ";
-        System.out.println("Expected value:"+expectedStringValue.length() + "actualValue:"+val.length());
+        show("Expected value:"+expectedStringValue.length() + "actualValue:"+val.length());
         assertEquals(expectedStringValue, val);
         String text = String.valueOf(t.getText());
         String expectedText = "\" ...  \\\"  \\\'  \\\\  \""; //almost the same as input, but white space is omitted

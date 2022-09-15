@@ -18,6 +18,7 @@ public class Lexer implements ILexer {
 
     private final List<Character> allowedStringLit = Arrays.asList('b', 't', 'n', 'f', 'r', '\"', '\'', '\\');
 
+    private static final boolean SHOW_OUTPUT = false;
 
     enum State {
         START,
@@ -38,11 +39,13 @@ public class Lexer implements ILexer {
         if (input.isEmpty()) {
             createToken(IToken.Kind.EOF, 0, 0, colNum);
         } else {
-            try {
-                handleInput(chars);
-            } catch (LexicalException e) {
-                System.out.println(e.getMessage());
-            }
+            handleInput(chars);
+        }
+    }
+
+    private void printOutput(Object text) {
+        if (SHOW_OUTPUT) {
+            System.out.println(text);
         }
     }
 
@@ -60,10 +63,10 @@ public class Lexer implements ILexer {
     }
 
 
-    private void handleInput(char[] chars) throws LexicalException {
+    private void handleInput(char[] chars) {
         while (startPos < chars.length) {
             char ch = chars[startPos];
-            System.out.println(ch);
+            printOutput(ch);
 
             switch (state) {
                 case START -> {
@@ -235,12 +238,10 @@ public class Lexer implements ILexer {
                         colNum++;
                         numDigits++;
                     }
-                    System.out.println(numDigits);
                     try {
                         Integer.parseInt(String.valueOf(chars, startPos - numDigits, numDigits));
                     } catch (NumberFormatException e) {
                         createToken(IToken.Kind.ERROR, startPos - numDigits, numDigits, colNum, "Number format exception trying to parse: "+Arrays.toString(chars));
-//                        throw new LexicalException("Number format exception.", lineNum, colNum - numDigits);
                     }
                     createToken(IToken.Kind.NUM_LIT, startPos - numDigits, numDigits, colNum - numDigits);
                     state = State.START;
@@ -361,9 +362,9 @@ public class Lexer implements ILexer {
 
     private void createToken(IToken.Kind kind, int pos, int len, int col, String... errorMsg) {
         IToken token = new Token(kind, chars, pos, len, new IToken.SourceLocation(lineNum, col), errorMsg);
-        System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input = "+String.valueOf(chars, pos, len)
-                + ", lineNum = "+lineNum + ", col = "+col);
-
+        String text = "kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input = " + String.valueOf(chars, pos, len)
+                + ", lineNum = " + lineNum + ", col = " + col;
+        printOutput(text);
         tokens.add(token);
     }
 
