@@ -270,6 +270,16 @@ class LexerTest {
         checkInt(lexer.next(), 25, 1, 3);
     }
 
+    @Test
+    public void testRepeatedEOF() throws LexicalException {
+        String input = "";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkEOF(lexer.next());
+        checkEOF(lexer.next());
+        checkEOF(lexer.next());
+    }
+
     /**
      *
      * Beginning of added tests. Could be incorrect.

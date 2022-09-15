@@ -370,8 +370,9 @@ public class Lexer implements ILexer {
 
     @Override
     public IToken next() throws LexicalException {
-        if (tokenPos >= tokens.size()) {
-            throw new IndexOutOfBoundsException();
+        Token eofToken = getEOFToken();
+        if (eofToken != null) {
+            return eofToken;
         }
 
         Token token = (Token) tokens.get(tokenPos++);
@@ -383,8 +384,9 @@ public class Lexer implements ILexer {
 
     @Override
     public IToken peek() throws LexicalException {
-        if (tokenPos >= tokens.size()) {
-            throw new IndexOutOfBoundsException();
+        Token eofToken = getEOFToken();
+        if (eofToken != null) {
+            return eofToken;
         }
 
         Token token = (Token) tokens.get(tokenPos);
@@ -392,5 +394,12 @@ public class Lexer implements ILexer {
             throw new LexicalException(String.valueOf(token.getText()));
         }
         return token;
+    }
+
+    private Token getEOFToken() {
+        if (tokenPos >= tokens.size()) {
+            return new Token(IToken.Kind.EOF, chars, startPos, 0, new IToken.SourceLocation(lineNum, colNum));
+        }
+        return null;
     }
 }
