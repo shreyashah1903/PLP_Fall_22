@@ -271,7 +271,6 @@ public class Lexer implements ILexer {
                     int charsOnNewline = colNum;
                     while (startPos < chars.length) {
                        ch = chars[startPos];
-//                        charsOnNewline = colNum;
                        if (ch == '\\') {
                            startPos++;
                            colNum++;
@@ -304,7 +303,6 @@ public class Lexer implements ILexer {
                            if (ch == '\n') {
                                line++;
                                charsOnNewline = 1;
-//                               colNum = 1;
                            }
                        }
                     }
@@ -364,7 +362,7 @@ public class Lexer implements ILexer {
     private void createToken(IToken.Kind kind, int pos, int len, int col, String... errorMsg) {
         IToken token = new Token(kind, chars, pos, len, new IToken.SourceLocation(lineNum, col), errorMsg);
         System.out.println("kind = " + kind + ", pos = " + pos + ", len = " + len + ", col = " + col + " input = "+String.valueOf(chars, pos, len)
-                + ", lineNum = "+lineNum + " col:"+col);
+                + ", lineNum = "+lineNum + ", col = "+col);
 
         tokens.add(token);
     }
