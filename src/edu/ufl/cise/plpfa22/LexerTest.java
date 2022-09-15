@@ -924,6 +924,20 @@ class LexerTest {
         this.checkToken(lexer.next(), Kind.TIMES, 1, 29);
         this.checkToken(lexer.next(), Kind.QUESTION, 1, 30);
     }
+
+    @Test
+    public void testSingleLenChars() throws LexicalException {
+        String input = """
+				\r\nabc
+				\t\t\t
+				\tdef
+				""";
+        show(input);
+        ILexer lexer = getLexer(input);
+        this.checkIdent(lexer.next(), "abc", 2, 1);
+        this.checkIdent(lexer.next(), "def", 4, 2);
+        checkEOF(lexer.next());
+    }
 }
 
 
