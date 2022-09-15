@@ -233,6 +233,42 @@ class LexerTest {
         assertEquals(expectedText, text);
     }
 
+    /**
+     * Self added tests
+     */
+
+    @Test
+    public void testNumLit00() throws LexicalException {
+        String input = "00";
+        show(input);
+        ILexer lexer = getLexer(input);
+        IToken token = lexer.next();
+        checkToken(token, Kind.NUM_LIT, 1, 1);
+        checkInt(token, 0);
+        checkToken(lexer.next(), Kind.NUM_LIT, 1, 2);
+        checkEOF(lexer.next());
+    }
+
+    @Test
+    public void testNumLitWithOperator() throws LexicalException {
+        String input = "10+3";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkInt(lexer.next(), 10, 1, 1);
+        checkToken(lexer.next(), Kind.PLUS, 1, 3);
+        checkInt(lexer.next(), 3, 1, 4);
+        checkEOF(lexer.next());
+    }
+
+    @Test
+    public void testNumLitWithFloatInvalid() throws LexicalException {
+        String input = "0.25";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkInt(lexer.next(), 0, 1, 1);
+        checkToken(lexer.next(), Kind.DOT, 1, 2);
+        checkInt(lexer.next(), 25, 1, 3);
+    }
 
     /**
      *
