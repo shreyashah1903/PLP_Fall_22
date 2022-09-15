@@ -268,11 +268,14 @@ public class Lexer implements ILexer {
                     // TODO Put String handling in a new function for readability
                     int len = 1;
                     int line = lineNum;
+                    int conNl = colNum;
                     while (startPos < chars.length) {
                        ch = chars[startPos];
+//                        conNl = colNum;
                        if (ch == '\\') {
                            startPos++;
                            colNum++;
+                           conNl++;
                            len++;
                            if (allowedStringLit.contains(chars[startPos])) {
                                len++;
@@ -282,11 +285,13 @@ public class Lexer implements ILexer {
                            }
                            startPos++;
                            colNum++;
+                           conNl++;
                        }
                        else if (ch == '"') {
                            startPos++;
                            colNum++;
                            len++;
+                           conNl++;
                            state = State.START;
                            break;
                        }
@@ -294,9 +299,12 @@ public class Lexer implements ILexer {
                            len++;
                            startPos++;
                            colNum++;
+                           conNl++;
                            // \n within a "" counts as a new line and not \\n
                            if (ch == '\n') {
                                line++;
+                               conNl = 1;
+//                               colNum = 1;
                            }
                        }
                     }
@@ -307,7 +315,7 @@ public class Lexer implements ILexer {
                         createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - len);
                     }
                     if (line - lineNum > 0) {
-                        colNum = 1;
+                        colNum = conNl;
                     }
                     lineNum = line;
                 }
