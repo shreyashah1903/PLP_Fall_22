@@ -295,7 +295,9 @@ public class Lexer implements ILexer {
                            startPos++;
                            colNum++;
                            // \n within a "" counts as a new line and not \\n
-                           line = ch == '\n' ? lineNum + 1 : lineNum;
+                           if (ch == '\n') {
+                               line++;
+                           }
                        }
                     }
                     if (state != State.START) {
@@ -303,6 +305,9 @@ public class Lexer implements ILexer {
                     }
                     else {
                         createToken(IToken.Kind.STRING_LIT, startPos - len, len, colNum - len);
+                    }
+                    if (line - lineNum > 0) {
+                        colNum = 1;
                     }
                     lineNum = line;
                 }
