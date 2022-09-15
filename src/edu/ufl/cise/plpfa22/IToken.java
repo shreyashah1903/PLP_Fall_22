@@ -1,7 +1,9 @@
-package edu.ufl.cise.plpfa22; /**  This code is provided for solely for use of students in the course COP5556 Programming Language Principles at the
+/**  This code is provided for solely for use of students in the course COP5556 Programming Language Principles at the 
  * University of Florida during the Fall Semester 2022 as part of the course project.  No other use is authorized. 
  */
 
+
+package edu.ufl.cise.plpfa22;
 
 public interface IToken {
 	
@@ -51,15 +53,15 @@ public interface IToken {
 	}
 
 	/**
-	 * Returns the Kind of this edu.ufl.cise.plpfa22.IToken
+	 * Returns the Kind of this IToken
 	 * @return
 	 */
 	public Kind getKind();
 
 	/**
-	 * Returns a char array containing the characters from the source program that represent this edu.ufl.cise.plpfa22.IToken.
+	 * Returns a char array containing the characters from the source program that represent this IToken.  
 	 * 
-	 * Note that if the the edu.ufl.cise.plpfa22.IToken kind is a STRING_LIT, the characters are the raw characters from the source, including the delimiters and unprocessed
+	 * Note that if the the IToken kind is a STRING_LIT, the characters are the raw characters from the source, including the delimiters and unprocessed 
 	 * escape sequences.  
 	 * 
 	 * @return
@@ -67,7 +69,7 @@ public interface IToken {
 	public char[] getText();
 
     /** 
-     * Returns a SourceLocation record containing the line and position in the line of the first character in this edu.ufl.cise.plpfa22.IToken.
+     * Returns a SourceLocation record containing the line and position in the line of the first character in this IToken.
      * 
      * @return  
      */
@@ -75,19 +77,19 @@ public interface IToken {
 	
 	/**
 	 * Precondition:  getKind == NUM_LIT
-	 * @returns int value represented by the characters in this edu.ufl.cise.plpfa22.IToken
+	 * @returns int value represented by the characters in this IToken
 	 */
 	public int getIntValue();
 
 	/**
 	 * Precondition:  getKind == BOOLEAN_LIT
-	 * @return boolean value represented by the characters in this edu.ufl.cise.plpfa22.IToken
+	 * @return boolean value represented by the characters in this IToken
 	 */
 	public boolean getBooleanValue();
 
 	/**
 	 * Precondition:  getKind == STRING_LIT
-	 * @return String value represented by the characters in this edu.ufl.cise.plpfa22.IToken.  The returned String does not include the delimiters, and escape sequences have been handled.
+	 * @return String value represented by the characters in this IToken.  The returned String does not include the delimiters, and escape sequences have been handled.
 	 */
 	public String getStringValue();
 
