@@ -9,4 +9,9 @@ public class CompilerComponentFactory {
 	public static ILexer getLexer(String input) {
 		return new Lexer(input);
 	}
+
+	public static IParser getParser(Lexer lexer) {
+//		return new Parser(lexer);
+	}
+
 }
