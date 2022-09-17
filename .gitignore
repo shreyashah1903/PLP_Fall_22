@@ -14,3 +14,7 @@ hs_err_pid*
 # IntelliJ
 out/
 *.iml
+
+## Other
+javaFiles
+*.jar
