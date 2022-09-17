@@ -14,7 +14,7 @@ public class SyntaxException extends PLPException {
 	}
 
 	public SyntaxException(String error_message, SourceLocation loc) {
-		super(error_message, loc);
+		super(error_message, loc.line(), loc.column());
 	}
 
 	public SyntaxException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {

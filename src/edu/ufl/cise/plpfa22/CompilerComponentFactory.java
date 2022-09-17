@@ -10,8 +10,8 @@ public class CompilerComponentFactory {
 		return new Lexer(input);
 	}
 
-	public static IParser getParser(Lexer lexer) {
-//		return new Parser(lexer);
+	public static IParser getParser(ILexer lexer) {
+		return new Parser(lexer);
 	}
 
 }
