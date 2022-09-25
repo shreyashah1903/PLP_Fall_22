@@ -9,6 +9,9 @@ import java.util.List;
 public class Parser implements IParser {
 
     private IToken firstToken;
+
+    private IToken token;
+
     private final ILexer lexer;
     private final List<ConstDec> constDecs = new ArrayList<>();
     private final List<VarDec> varDecs = new ArrayList<>();
@@ -18,6 +21,7 @@ public class Parser implements IParser {
         this.lexer = lexer;
         try {
             firstToken = lexer.next();
+            token = firstToken;
         } catch (LexicalException e) {
             e.printStackTrace();
         }
@@ -30,29 +34,48 @@ public class Parser implements IParser {
     }
 
     private Statement getStatement(IToken token) throws LexicalException {
-         if (token.getKind() == IToken.Kind.BANG) {
-             consume();
-             Expression expression;
-             try {
-                 expression = getExpression(firstToken);
-             } catch (OperationNotSupportedException e) {
-                 throw new RuntimeException(e);
-             }
-             return new StatementOutput(token, expression);
-         }
-         else {
-             return new StatementEmpty(token);
-         }
+        consume();
+        switch (token.getKind()) {
+            case BANG -> {
+                Expression expression;
+                try {
+                    expression = getExpression(this.token);
+                } catch (OperationNotSupportedException e) {
+                    throw new RuntimeException(e);
+                }
+                return new StatementOutput(token, expression);
+            }
+            case KW_VAR, KW_CONST, KW_PROCEDURE -> {
+                varDecs.add(new VarDec(firstToken, this.token));
+                return new StatementEmpty(token);
+            }
+            case KW_BEGIN -> {
+                List<Statement> statements = new ArrayList<>();
+                return new StatementBlock(firstToken, statements);
+            }
+            default -> {
+                return new StatementEmpty(token);
+            }
+        }
     }
 
     private void consume() throws LexicalException {
-        firstToken = lexer.next();
+        token = lexer.next();
     }
 
     private Expression getExpression(IToken token) throws OperationNotSupportedException {
         switch (token.getKind()) {
             case NUM_LIT -> {
                 return new ExpressionNumLit(token);
+            }
+            case STRING_LIT -> {
+               return new ExpressionStringLit(token);
+            }
+            case BOOLEAN_LIT -> {
+                return new ExpressionBooleanLit(token);
+            }
+            case IDENT -> {
+                return new ExpressionIdent(token);
             }
             default -> throw new OperationNotSupportedException();
         }
