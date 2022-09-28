@@ -33,7 +33,7 @@ public class Parser implements IParser {
         return new Program(firstToken, block);
     }
 
-    private Statement getStatement(IToken token) throws LexicalException {
+    private Statement getStatement(IToken token) throws LexicalException, SyntaxException {
         if (token.getKind() == IToken.Kind.EOF) {
             return new StatementEmpty(firstToken);
         }
@@ -73,18 +73,18 @@ public class Parser implements IParser {
                             consume();
                         }
                         else {
-                            throw new RuntimeException();
+                            throw new SyntaxException();
                         }
                         switch (this.token.getKind()) {
                             case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getIntValue()));
                             case STRING_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getStringValue()));
                             case BOOLEAN_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getBooleanValue()));
-                            default -> throw new RuntimeException();
+                            default -> throw new SyntaxException();
                         }
                         consume();
                         if(this.token.getKind() == IToken.Kind.COMMA) consume();
                     } else {
-                        throw new RuntimeException();
+                        throw new SyntaxException();
                     }
                 } while (this.token.getKind() != IToken.Kind.SEMI);
                 return new StatementEmpty(firstToken);
