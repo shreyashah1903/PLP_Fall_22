@@ -124,6 +124,79 @@ public class Parser implements IParser {
         }
     }
 
+
+    private Expression handlePrimaryExpression(IToken token) throws LexicalException, SyntaxException {
+        // TODO: Handle ( <expression> )
+        Expression expression;
+        switch (token.getKind()) {
+            case IDENT -> expression = new ExpressionIdent(token);
+            case NUM_LIT -> expression = new ExpressionNumLit(token);
+            case STRING_LIT -> expression = new ExpressionStringLit(token);
+            case BOOLEAN_LIT -> expression = new ExpressionBooleanLit(token);
+            default -> throw new SyntaxException();
+        }
+        consume();
+        return expression;
+    }
+
+    private Expression handleMultiplicativeExpression(IToken token) throws LexicalException, SyntaxException {
+        Expression operand1 = handlePrimaryExpression(token);
+        Expression operand2 = null;
+        IToken operator = null;
+        while(this.token.getKind() == IToken.Kind.TIMES || this.token.getKind() == IToken.Kind.DIV
+                || this.token.getKind() == IToken.Kind.MOD) {
+            operator = this.token;
+            switch(this.token.getKind()) {
+                case TIMES, DIV, MOD -> consume();
+            }
+            operand2 = handlePrimaryExpression(this.token);
+            operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
+        }
+        if(operator == null || operand2 == null) throw new SyntaxException();
+        return new ExpressionBinary(firstToken, operand1, operator, operand2);
+    }
+
+
+    private Expression handleAdditiveExpression(IToken token) throws LexicalException, SyntaxException {
+        Expression operand1 = handleMultiplicativeExpression(token);
+        Expression operand2 = null;
+        IToken operator = null;
+        while(this.token.getKind() == IToken.Kind.PLUS || this.token.getKind() == IToken.Kind.MINUS) {
+            operator = this.token;
+            switch(this.token.getKind()) {
+                case PLUS, MINUS -> consume();
+            }
+            operand2 = handleMultiplicativeExpression(this.token);
+            operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
+        }
+        if(operator == null || operand2 == null) throw new SyntaxException();
+        return new ExpressionBinary(firstToken, operand1, operator, operand2);
+    }
+
+    private Expression handleExpression(IToken token) throws LexicalException, SyntaxException {
+        Expression operand1 = handleAdditiveExpression(token);
+        Expression operand2 = null;
+        IToken operator = null;
+        while(isExpressionOperand(this.token.getKind())) {
+            operator = this.token;
+            if(isExpressionOperand(this.token.getKind())) consume();
+            operand2 = handleAdditiveExpression(this.token);
+            operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
+        }
+        if(operator == null || operand2 == null) throw new SyntaxException();
+        return new ExpressionBinary(firstToken, operand1, operator, operand2);
+    }
+
+    private boolean isExpressionOperand(IToken.Kind kind) {
+        switch (kind) {
+            case LT, GT, EQ, NEQ, LE, GE -> {
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
     private void consume() throws LexicalException {
         token = lexer.next();
     }
