@@ -54,14 +54,33 @@ public class Parser implements IParser {
             }
             case KW_BEGIN -> {
                 List<Statement> statements = new ArrayList<>();
-                while (this.token.getKind() != IToken.Kind.EOF || this.token.getKind() != IToken.Kind.KW_END) {
-                    statements.add(getStatement(this.token));
+                while (this.token.getKind() != IToken.Kind.EOF && this.token.getKind() != IToken.Kind.KW_END) {
+                    Statement statement = handleBeginStatement(this.token);
+                    if (!(statement instanceof StatementEmpty)) {
+                        statements.add(statement);
+                    }
+                    consume();
                 }
                 return new StatementBlock(firstToken, statements);
             }
             case QUESTION -> {
                 return new StatementInput(firstToken, new Ident(this.token));
             }
+            case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
+                try {
+                    return new StatementOutput(token, getExpression(token));
+                } catch (OperationNotSupportedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            default -> {
+                return new StatementEmpty(token);
+            }
+        }
+    }
+
+    private Statement handleBeginStatement(IToken token) {
+        switch (token.getKind()) {
             case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
                 try {
                     return new StatementOutput(token, getExpression(token));
