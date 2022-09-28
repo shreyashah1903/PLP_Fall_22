@@ -54,12 +54,15 @@ public class Parser implements IParser {
             }
             case KW_BEGIN -> {
                 List<Statement> statements = new ArrayList<>();
-                while (this.token.getKind() != IToken.Kind.EOF) {
+                while (this.token.getKind() != IToken.Kind.EOF || this.token.getKind() != IToken.Kind.KW_END) {
                     statements.add(getStatement(this.token));
                 }
                 return new StatementBlock(firstToken, statements);
             }
-            case STRING_LIT -> {
+            case QUESTION -> {
+                return new StatementInput(firstToken, new Ident(this.token));
+            }
+            case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
                 try {
                     return new StatementOutput(token, getExpression(token));
                 } catch (OperationNotSupportedException e) {
@@ -81,11 +84,11 @@ public class Parser implements IParser {
             case NUM_LIT -> {
                 return new ExpressionNumLit(token);
             }
-            case STRING_LIT -> {
-               return new ExpressionStringLit(token);
-            }
             case BOOLEAN_LIT -> {
                 return new ExpressionBooleanLit(token);
+            }
+            case STRING_LIT -> {
+                return new ExpressionStringLit(token);
             }
             case IDENT -> {
                 return new ExpressionIdent(token);
