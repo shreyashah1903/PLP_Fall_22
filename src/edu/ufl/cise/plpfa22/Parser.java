@@ -34,6 +34,9 @@ public class Parser implements IParser {
     }
 
     private Statement getStatement(IToken token) throws LexicalException {
+        if (token.getKind() == IToken.Kind.EOF) {
+            return new StatementEmpty(firstToken);
+        }
         consume();
         switch (token.getKind()) {
             case BANG -> {
@@ -51,7 +54,17 @@ public class Parser implements IParser {
             }
             case KW_BEGIN -> {
                 List<Statement> statements = new ArrayList<>();
+                while (this.token.getKind() != IToken.Kind.EOF) {
+                    statements.add(getStatement(this.token));
+                }
                 return new StatementBlock(firstToken, statements);
+            }
+            case STRING_LIT -> {
+                try {
+                    return new StatementOutput(token, getExpression(token));
+                } catch (OperationNotSupportedException e) {
+                    throw new RuntimeException(e);
+                }
             }
             default -> {
                 return new StatementEmpty(token);
