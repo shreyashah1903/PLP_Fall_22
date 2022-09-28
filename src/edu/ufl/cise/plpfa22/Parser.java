@@ -130,6 +130,10 @@ public class Parser implements IParser {
                 consume();
                 return new StatementInput(firstToken, new Ident(this.token));
             }
+            case KW_CALL -> {
+                consume();
+                return new StatementCall(firstToken, new Ident(this.token));
+            }
             default -> {
                 return new StatementEmpty(token);
             }
