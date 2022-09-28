@@ -79,7 +79,7 @@ public class Parser implements IParser {
         }
     }
 
-    private Statement handleBeginStatement(IToken token) {
+    private Statement handleBeginStatement(IToken token) throws LexicalException {
         switch (token.getKind()) {
             case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
                 try {
@@ -87,6 +87,10 @@ public class Parser implements IParser {
                 } catch (OperationNotSupportedException e) {
                     throw new RuntimeException(e);
                 }
+            }
+            case QUESTION -> {
+                consume();
+                return new StatementInput(firstToken, new Ident(this.token));
             }
             default -> {
                 return new StatementEmpty(token);
