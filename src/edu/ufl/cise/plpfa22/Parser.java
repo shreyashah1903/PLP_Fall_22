@@ -48,8 +48,20 @@ public class Parser implements IParser {
                 }
                 return new StatementOutput(token, expression);
             }
-            case KW_VAR, KW_PROCEDURE -> {
+            case KW_VAR -> {
                 varDecs.add(new VarDec(firstToken, this.token));
+                return new StatementEmpty(token);
+            }
+            case KW_PROCEDURE -> {
+//                procedureDecs.add(new ProcDec(firstToken, this.token));
+                consume();
+                while(token.getKind() != IToken.Kind.SEMI) {
+                    if (token.getKind() != IToken.Kind.IDENT) {
+                        throw new SyntaxException("Token " + token.getKind() +" unexpected", token.getSourceLocation().line(), token.getSourceLocation().column());
+                    }
+
+
+                }
                 return new StatementEmpty(token);
             }
             case KW_BEGIN -> {
