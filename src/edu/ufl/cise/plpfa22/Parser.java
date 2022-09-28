@@ -48,7 +48,7 @@ public class Parser implements IParser {
                 }
                 return new StatementOutput(token, expression);
             }
-            case KW_VAR, KW_CONST, KW_PROCEDURE -> {
+            case KW_VAR, KW_PROCEDURE -> {
                 varDecs.add(new VarDec(firstToken, this.token));
                 return new StatementEmpty(token);
             }
@@ -62,6 +62,32 @@ public class Parser implements IParser {
                     consume();
                 }
                 return new StatementBlock(firstToken, statements);
+            }
+            case KW_CONST -> {
+                IToken ident;
+                do {
+                    if(this.token.getKind() == IToken.Kind.IDENT) {
+                        ident = this.token;
+                        consume();
+                        if(this.token.getKind() == IToken.Kind.EQ) {
+                            consume();
+                        }
+                        else {
+                            throw new RuntimeException();
+                        }
+                        switch (this.token.getKind()) {
+                            case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getIntValue()));
+                            case STRING_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getStringValue()));
+                            case BOOLEAN_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getBooleanValue()));
+                            default -> throw new RuntimeException();
+                        }
+                        consume();
+                        if(this.token.getKind() == IToken.Kind.COMMA) consume();
+                    } else {
+                        throw new RuntimeException();
+                    }
+                } while (this.token.getKind() != IToken.Kind.SEMI);
+                return new StatementEmpty(firstToken);
             }
             case QUESTION -> {
                 return new StatementInput(firstToken, new Ident(this.token));
