@@ -2,7 +2,6 @@ package edu.ufl.cise.plpfa22;
 
 import edu.ufl.cise.plpfa22.ast.*;
 
-import javax.naming.OperationNotSupportedException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,12 +39,7 @@ public class Parser implements IParser {
         consume();
         switch (token.getKind()) {
             case BANG -> {
-                Expression expression;
-                try {
-                    expression = getExpression(this.token);
-                } catch (OperationNotSupportedException e) {
-                    throw new RuntimeException(e);
-                }
+                Expression expression = getExpression(this.token);
                 return new StatementOutput(token, expression);
             }
             case KW_VAR -> {
@@ -55,12 +49,10 @@ public class Parser implements IParser {
             case KW_PROCEDURE -> {
 //                procedureDecs.add(new ProcDec(firstToken, this.token));
                 consume();
-                while(token.getKind() != IToken.Kind.SEMI) {
+                while (token.getKind() != IToken.Kind.SEMI) {
                     if (token.getKind() != IToken.Kind.IDENT) {
-                        throw new SyntaxException("Token " + token.getKind() +" unexpected", token.getSourceLocation().line(), token.getSourceLocation().column());
+                        throwSyntaxException(token);
                     }
-
-
                 }
                 return new StatementEmpty(token);
             }
@@ -78,23 +70,24 @@ public class Parser implements IParser {
             case KW_CONST -> {
                 IToken ident;
                 do {
-                    if(this.token.getKind() == IToken.Kind.IDENT) {
+                    if (this.token.getKind() == IToken.Kind.IDENT) {
                         ident = this.token;
                         consume();
-                        if(this.token.getKind() == IToken.Kind.EQ) {
+                        if (this.token.getKind() == IToken.Kind.EQ) {
                             consume();
-                        }
-                        else {
+                        } else {
                             throw new SyntaxException();
                         }
                         switch (this.token.getKind()) {
                             case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getIntValue()));
-                            case STRING_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getStringValue()));
-                            case BOOLEAN_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getBooleanValue()));
+                            case STRING_LIT ->
+                                    constDecs.add(new ConstDec(firstToken, ident, this.token.getStringValue()));
+                            case BOOLEAN_LIT ->
+                                    constDecs.add(new ConstDec(firstToken, ident, this.token.getBooleanValue()));
                             default -> throw new SyntaxException();
                         }
                         consume();
-                        if(this.token.getKind() == IToken.Kind.COMMA) consume();
+                        if (this.token.getKind() == IToken.Kind.COMMA) consume();
                     } else {
                         throw new SyntaxException();
                     }
@@ -105,11 +98,7 @@ public class Parser implements IParser {
                 return new StatementInput(firstToken, new Ident(this.token));
             }
             case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
-                try {
-                    return new StatementOutput(token, getExpression(token));
-                } catch (OperationNotSupportedException e) {
-                    throw new RuntimeException(e);
-                }
+                return new StatementOutput(token, getExpression(token));
             }
             default -> {
                 return new StatementEmpty(token);
@@ -117,27 +106,45 @@ public class Parser implements IParser {
         }
     }
 
-    private Statement handleBeginStatement(IToken token) throws LexicalException {
-        switch (token.getKind()) {
-            case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
-                try {
-                    return new StatementOutput(token, getExpression(token));
-                } catch (OperationNotSupportedException e) {
-                    throw new RuntimeException(e);
+    private Statement handleBeginStatement(IToken startToken) throws LexicalException, SyntaxException {
+        List<IToken> tokens = new ArrayList<>();
+
+        if (startToken.getKind() == IToken.Kind.IDENT) {
+            while (token.getKind() != IToken.Kind.SEMI && token.getKind() != IToken.Kind.KW_END) {
+                if (token.getKind() != IToken.Kind.ASSIGN) {
+                    tokens.add(token);
+                }
+                consume();
+            }
+            Ident ident = new Ident(tokens.get(0));
+            ident.setDec(new VarDec(firstToken, tokens.get(0)));
+            return new StatementAssign(firstToken, ident, getExpression(tokens.get(1)));
+        } else if (startToken.getKind() == IToken.Kind.BANG) {
+            consume();
+            if (token.getKind() != IToken.Kind.SEMI && token.getKind() != IToken.Kind.KW_END) {
+                return new StatementOutput(startToken, getExpression(token));
+            }
+        } else {
+            switch (startToken.getKind()) {
+                case QUESTION -> {
+                    consume();
+                    return new StatementInput(firstToken, new Ident(this.token));
+                }
+                case KW_CALL -> {
+                    consume();
+                    return new StatementCall(firstToken, new Ident(this.token));
+                }
+                default -> {
+                    return new StatementEmpty(startToken);
                 }
             }
-            case QUESTION -> {
-                consume();
-                return new StatementInput(firstToken, new Ident(this.token));
-            }
-            case KW_CALL -> {
-                consume();
-                return new StatementCall(firstToken, new Ident(this.token));
-            }
-            default -> {
-                return new StatementEmpty(token);
-            }
         }
+        return new StatementEmpty(startToken);
+    }
+
+    private static void throwSyntaxException(IToken token) throws SyntaxException {
+        throw new SyntaxException("Expected token ident inside BEGIN, Found " + token.getKind(),
+                token.getSourceLocation().line(), token.getSourceLocation().line());
     }
 
 
@@ -159,16 +166,16 @@ public class Parser implements IParser {
         Expression operand1 = handlePrimaryExpression(token);
         Expression operand2 = null;
         IToken operator = null;
-        while(this.token.getKind() == IToken.Kind.TIMES || this.token.getKind() == IToken.Kind.DIV
+        while (this.token.getKind() == IToken.Kind.TIMES || this.token.getKind() == IToken.Kind.DIV
                 || this.token.getKind() == IToken.Kind.MOD) {
             operator = this.token;
-            switch(this.token.getKind()) {
+            switch (this.token.getKind()) {
                 case TIMES, DIV, MOD -> consume();
             }
             operand2 = handlePrimaryExpression(this.token);
             operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
         }
-        if(operator == null || operand2 == null) throw new SyntaxException();
+        if (operator == null || operand2 == null) throw new SyntaxException();
         return new ExpressionBinary(firstToken, operand1, operator, operand2);
     }
 
@@ -177,15 +184,15 @@ public class Parser implements IParser {
         Expression operand1 = handleMultiplicativeExpression(token);
         Expression operand2 = null;
         IToken operator = null;
-        while(this.token.getKind() == IToken.Kind.PLUS || this.token.getKind() == IToken.Kind.MINUS) {
+        while (this.token.getKind() == IToken.Kind.PLUS || this.token.getKind() == IToken.Kind.MINUS) {
             operator = this.token;
-            switch(this.token.getKind()) {
+            switch (this.token.getKind()) {
                 case PLUS, MINUS -> consume();
             }
             operand2 = handleMultiplicativeExpression(this.token);
             operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
         }
-        if(operator == null || operand2 == null) throw new SyntaxException();
+        if (operator == null || operand2 == null) throw new SyntaxException();
         return new ExpressionBinary(firstToken, operand1, operator, operand2);
     }
 
@@ -193,13 +200,13 @@ public class Parser implements IParser {
         Expression operand1 = handleAdditiveExpression(token);
         Expression operand2 = null;
         IToken operator = null;
-        while(isExpressionOperand(this.token.getKind())) {
+        while (isExpressionOperand(this.token.getKind())) {
             operator = this.token;
-            if(isExpressionOperand(this.token.getKind())) consume();
+            if (isExpressionOperand(this.token.getKind())) consume();
             operand2 = handleAdditiveExpression(this.token);
             operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
         }
-        if(operator == null || operand2 == null) throw new SyntaxException();
+        if (operator == null || operand2 == null) throw new SyntaxException();
         return new ExpressionBinary(firstToken, operand1, operator, operand2);
     }
 
@@ -213,11 +220,12 @@ public class Parser implements IParser {
             }
         }
     }
+
     private void consume() throws LexicalException {
         token = lexer.next();
     }
 
-    private Expression getExpression(IToken token) throws OperationNotSupportedException {
+    private Expression getExpression(IToken token) {
         switch (token.getKind()) {
             case NUM_LIT -> {
                 return new ExpressionNumLit(token);
@@ -231,7 +239,7 @@ public class Parser implements IParser {
             case IDENT -> {
                 return new ExpressionIdent(token);
             }
-            default -> throw new OperationNotSupportedException();
+            default -> throw new RuntimeException();
         }
     }
 }
