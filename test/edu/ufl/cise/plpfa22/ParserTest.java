@@ -737,6 +737,37 @@ class ParserTest {
 		assertEquals("4",String.valueOf(v14.getText()));
 	}
 
+
+	@Test
+	// Test the Statement If
+	void test18() throws PLPException {
+		String input = """
+    			IF (x > y) THEN ! \"Number 1 is larger than number 2\";
+    			.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(0, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(0, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+		Statement v4 = ((Block) v0).statement;
+		assertThat("", v4, instanceOf(StatementIf.class));
+		Expression v5 = ((StatementIf) v4).expression;
+		assertEquals("x", String.valueOf(((ExpressionBinary) v5).e0.getFirstToken().getText()));
+		assertEquals(">", String.valueOf(((ExpressionBinary) v5).op.getText()));
+		assertEquals("y", String.valueOf(((ExpressionBinary) v5).e1.getFirstToken().getText()));
+		Statement v6 = ((StatementIf) v4).statement;
+		assertThat("", v6, instanceOf(StatementOutput.class));
+		Expression v7 = ((StatementOutput) v6).expression;
+		assertThat("", v7, instanceOf(ExpressionStringLit.class));
+		assertEquals("\"Number 1 is larger than number 2\"", String.valueOf(v7.getFirstToken().getText()));
+	}
+
 	// Tests added from Google doc
 	@Test
 	void test_1() throws PLPException{
