@@ -768,6 +768,48 @@ class ParserTest {
 		assertEquals("\"Number 1 is larger than number 2\"", String.valueOf(v7.getFirstToken().getText()));
 	}
 
+	@Test
+	//	Test the Statement While
+	void test19() throws PLPException {
+		String input = """
+    			WHILE 0 < a < 2 DO a:=3*2;
+    			.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(0, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(0, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+		Statement v4 = ((Block) v0).statement;
+		assertThat("", v4, instanceOf(StatementWhile.class));
+		Expression v5 = ((StatementWhile) v4).expression;
+		Expression v6 = ((ExpressionBinary) v5).e0;
+		assertThat("", v6, instanceOf(ExpressionBinary.class));
+		assertThat("", ((ExpressionBinary) v6).e0, instanceOf(ExpressionNumLit.class));
+		assertEquals("0", String.valueOf(((ExpressionBinary) v6).e0.getFirstToken().getText()));
+		assertEquals("<", String.valueOf(((ExpressionBinary) v6).op.getText()));
+		assertThat("", ((ExpressionBinary) v6).e1, instanceOf(ExpressionIdent.class));
+		assertEquals("a", String.valueOf(((ExpressionBinary) v6).e1.getFirstToken().getText()));
+		assertEquals("<", String.valueOf(((ExpressionBinary) v5).op.getText()));
+		assertThat("", ((ExpressionBinary) v5).e1, instanceOf(ExpressionNumLit.class));
+		assertEquals("2", String.valueOf(((ExpressionBinary) v5).e1.getFirstToken().getText()));
+		Statement v7 = ((StatementWhile) v4).statement;
+		assertThat("", v7, instanceOf(StatementAssign.class));
+		assertEquals("a", String.valueOf(((StatementAssign) v7).ident.getText()));
+		Expression v8 = ((StatementWhile) v4).expression;
+		assertThat("", v8, instanceOf(ExpressionBinary.class));
+		assertThat("", ((ExpressionBinary) v8).e0, instanceOf(ExpressionNumLit.class));
+		assertEquals("3", String.valueOf(((ExpressionBinary) v8).e0.getFirstToken().getText()));
+		assertEquals("*", String.valueOf(((ExpressionBinary) v8).op.getText()));
+		assertThat("", ((ExpressionBinary) v8).e1, instanceOf(ExpressionNumLit.class));
+		assertEquals("2", String.valueOf(((ExpressionBinary) v8).e1.getFirstToken().getText()));
+	}
+
 	// Tests added from Google doc
 	@Test
 	void test_1() throws PLPException{
