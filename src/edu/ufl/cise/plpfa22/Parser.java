@@ -40,7 +40,7 @@ public class Parser implements IParser {
         while (this.token.getKind() != IToken.Kind.DOT) {
             switch (startToken.getKind()) {
                 case BANG -> {
-                    Expression expression = getExpression(this.token);
+                    Expression expression = handleExpression(this.token);
                     return new StatementOutput(startToken, expression);
                 }
                 case KW_VAR -> {
@@ -240,8 +240,7 @@ public class Parser implements IParser {
             operand2 = handlePrimaryExpression(this.token);
             operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
         }
-        if (operator == null || operand2 == null) throw new SyntaxException();
-        return new ExpressionBinary(firstToken, operand1, operator, operand2);
+        return operand1;
     }
 
 
@@ -257,22 +256,28 @@ public class Parser implements IParser {
             operand2 = handleMultiplicativeExpression(this.token);
             operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
         }
-        if (operator == null || operand2 == null) throw new SyntaxException();
-        return new ExpressionBinary(firstToken, operand1, operator, operand2);
+        return operand1;
     }
 
     private Expression handleExpression(IToken token) throws LexicalException, SyntaxException {
-        Expression operand1 = handleAdditiveExpression(token);
+        Expression operand1 = handleAdditiveExpression(this.token);
         Expression operand2 = null;
         IToken operator = null;
+        IToken.Kind kind = this.token.getKind();
+        if(!isValidOperator(kind) && kind != IToken.Kind.DOT) throw new SyntaxException();
         while (isExpressionOperand(this.token.getKind())) {
             operator = this.token;
             if (isExpressionOperand(this.token.getKind())) consume();
             operand2 = handleAdditiveExpression(this.token);
             operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
         }
-        if (operator == null || operand2 == null) throw new SyntaxException();
-        return new ExpressionBinary(firstToken, operand1, operator, operand2);
+        if(this.token.getKind() == IToken.Kind.SEMI) consume();
+        return operand1;
+    }
+
+    private boolean isValidOperator(IToken.Kind kind) {
+        return isExpressionOperand(kind) || kind == IToken.Kind.TIMES || kind == IToken.Kind.MOD || kind == IToken.Kind.DIV ||
+                kind == IToken.Kind.PLUS || kind == IToken.Kind.MINUS || kind == IToken.Kind.SEMI;
     }
 
     private boolean isExpressionOperand(IToken.Kind kind) {
