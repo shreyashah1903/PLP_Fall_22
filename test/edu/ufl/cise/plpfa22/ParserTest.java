@@ -634,7 +634,7 @@ class ParserTest {
 	}
 
 	@Test
-//The error in this example should be found by the Lexer
+	//The error in this example should be found by the Lexer
 	void test15() throws PLPException {
 		String input = """
 				VAR @;
@@ -644,6 +644,55 @@ class ParserTest {
 			@SuppressWarnings("unused")
 			ASTNode ast = getAST(input);
 		});
+	}
+
+	@Test
+	// Test the expression with parenthesis
+	void test16() throws PLPException {
+		String input = """
+    			! 40/((4+1)*2);
+    			.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(0, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(0, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+		Statement v4 = ((Block) v0).statement;
+		assertThat("", v4, instanceOf(StatementOutput.class));
+		Expression v5 = ((StatementOutput) v4).expression;
+		assertThat("", v5, instanceOf(ExpressionBinary.class));
+		Expression v6 = ((ExpressionBinary) v5).e0;
+		assertThat("", v6, instanceOf(ExpressionNumLit.class));
+		IToken v7 = ((ExpressionNumLit) v6).firstToken;
+		assertEquals("40",String.valueOf(v7.getText()));
+		IToken v8 = ((ExpressionBinary) v5).op;
+		assertEquals("/", String.valueOf(v8.getText()));
+		Expression v9 = ((ExpressionBinary) v5).e1;
+		assertThat("", v9, instanceOf(ExpressionBinary.class));
+		Expression v10 = ((ExpressionBinary) v9).e0;
+		assertThat("", v10, instanceOf(ExpressionBinary.class));
+		Expression v11 = ((ExpressionBinary) v10).e0;
+		assertThat("", v11, instanceOf(ExpressionNumLit.class));
+		IToken v12 = ((ExpressionNumLit) v11).firstToken;
+		assertEquals("4", String.valueOf(v12.getText()));
+		IToken v13 = ((ExpressionBinary) v10).op;
+		assertEquals("+", String.valueOf(v13.getText()));
+		Expression v14 = ((ExpressionBinary) v10).e1;
+		assertThat("", v14, instanceOf(ExpressionNumLit.class));
+		IToken v15 = ((ExpressionNumLit) v14).firstToken;
+		assertEquals("1", String.valueOf(v15.getText()));
+		IToken v16 = ((ExpressionBinary) v9).op;
+		assertEquals("*", String.valueOf(v16.getText()));
+		Expression v17 = ((ExpressionBinary) v9).e1;
+		assertThat("", v14, instanceOf(ExpressionNumLit.class));
+		IToken v18 = ((ExpressionNumLit) v17).firstToken;
+		assertEquals("2", String.valueOf(v18.getText()));
 	}
 
 }
