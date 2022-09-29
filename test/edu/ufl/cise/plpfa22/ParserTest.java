@@ -646,6 +646,7 @@ class ParserTest {
 		});
 	}
 
+	// Self added tests
 	@Test
 	// Test the expression with parenthesis
 	void test16() throws PLPException {
@@ -695,4 +696,44 @@ class ParserTest {
 		assertEquals("2", String.valueOf(v18.getText()));
 	}
 
+	@Test
+	// Test the expression with parenthesis
+	void test17() throws PLPException {
+		String input = """
+    			! 2+3*4;
+    			.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(0, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(0, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+		Statement v4 = ((Block) v0).statement;
+		assertThat("", v4, instanceOf(StatementOutput.class));
+		Expression v5 = ((StatementOutput) v4).expression;
+		assertThat("", v5, instanceOf(ExpressionBinary.class));
+		Expression v6 = ((ExpressionBinary) v5).e0;
+		assertThat("", v6, instanceOf(ExpressionNumLit.class));
+		IToken v7 = ((ExpressionNumLit) v6).firstToken;
+		assertEquals("2",String.valueOf(v7.getText()));
+		IToken v8 = ((ExpressionBinary) v5).op;
+		assertEquals("+", String.valueOf(v8.getText()));
+		Expression v9 = ((ExpressionBinary) v5).e1;
+		assertThat("", v9, instanceOf(ExpressionBinary.class));
+		Expression v10 = ((ExpressionBinary) v9).e0;
+		assertThat("", v10, instanceOf(ExpressionNumLit.class));
+		IToken v11 = ((ExpressionNumLit) v10).firstToken;
+		assertEquals("3", String.valueOf(v11.getText()));
+		IToken v12 = ((ExpressionBinary) v9).op;
+		assertEquals("*", String.valueOf(v12.getText()));
+		Expression v13 = ((ExpressionBinary) v9).e1;
+		assertThat("", v13, instanceOf(ExpressionNumLit.class));
+		IToken v14 = ((ExpressionNumLit) v13).firstToken;
+		assertEquals("4",String.valueOf(v14.getText()));
+	}
 }
