@@ -133,6 +133,10 @@ public class Parser implements IParser {
                 }
             }
         }
+        if(this.token.getKind() == IToken.Kind.DOT){
+            consume();
+            if(this.token.getKind() != IToken.Kind.EOF) throw new SyntaxException();
+        }
         return new StatementEmpty(firstToken);
     }
 
