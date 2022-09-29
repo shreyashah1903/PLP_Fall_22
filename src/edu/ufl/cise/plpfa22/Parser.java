@@ -32,78 +32,108 @@ public class Parser implements IParser {
         return new Program(firstToken, block);
     }
 
-    private Statement getStatement(IToken token) throws LexicalException, SyntaxException {
-        if (token.getKind() == IToken.Kind.EOF) {
+    private Statement getStatement(IToken startToken) throws LexicalException, SyntaxException {
+        if (startToken.getKind() == IToken.Kind.EOF) {
             return new StatementEmpty(firstToken);
         }
         consume();
-        switch (token.getKind()) {
-            case BANG -> {
-                Expression expression = getExpression(this.token);
-                return new StatementOutput(token, expression);
-            }
-            case KW_VAR -> {
-                varDecs.add(new VarDec(firstToken, this.token));
-                return new StatementEmpty(token);
-            }
-            case KW_PROCEDURE -> {
-//                procedureDecs.add(new ProcDec(firstToken, this.token));
-                consume();
-                while (token.getKind() != IToken.Kind.SEMI) {
-                    if (token.getKind() != IToken.Kind.IDENT) {
-                        throwSyntaxException(token);
-                    }
+        while (this.token.getKind() != IToken.Kind.DOT) {
+            switch (startToken.getKind()) {
+                case BANG -> {
+                    Expression expression = getExpression(this.token);
+                    return new StatementOutput(startToken, expression);
                 }
-                return new StatementEmpty(token);
-            }
-            case KW_BEGIN -> {
-                List<Statement> statements = new ArrayList<>();
-                while (this.token.getKind() != IToken.Kind.EOF && this.token.getKind() != IToken.Kind.KW_END) {
-                    Statement statement = handleBeginStatement(this.token);
-                    if (!(statement instanceof StatementEmpty)) {
-                        statements.add(statement);
+                case KW_VAR -> {
+                    while (this.token.getKind() != IToken.Kind.SEMI) {
+                        if (this.token.getKind() == IToken.Kind.IDENT) {
+                            varDecs.add(new VarDec(firstToken, this.token));
+                        }
+                        consume();
                     }
                     consume();
+//                    return new StatementEmpty(startToken);
+                    startToken = this.token;
                 }
-                return new StatementBlock(firstToken, statements);
-            }
-            case KW_CONST -> {
-                IToken ident;
-                do {
-                    if (this.token.getKind() == IToken.Kind.IDENT) {
-                        ident = this.token;
+                case KW_PROCEDURE -> {
+//                procedureDecs.add(new ProcDec(firstToken, this.token));
+                    //consume();
+                    if (token.getKind() != IToken.Kind.SEMI) {
+                        throwSyntaxException(token);
+                    }
+                    while (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
+//                        if (token.getKind() != IToken.Kind.IDENT) {
+//                            throwSyntaxException(startToken);
+//                        }
+                        IToken ident = token;
+                        // Consuming ident
                         consume();
-                        if (this.token.getKind() == IToken.Kind.EQ) {
+                        //Consuming semi
+                        if (token.getKind() != IToken.Kind.SEMI) {
+                            throwSyntaxException(token);
+                        }
+                        consume();
+                        startToken = token;
+                        // Consuming any BEGIN keyword
+                        consume();
+                        Block block = new Block(token, constDecs, varDecs, procedureDecs, getStatement(startToken));
+                        procedureDecs.add(new ProcDec(firstToken, ident, block));
+//                        consume();
+                    }
+                    return new StatementEmpty(startToken);
+                }
+                case KW_BEGIN -> {
+                    List<Statement> statements = new ArrayList<>();
+                    if (token.getKind() == IToken.Kind.KW_BEGIN) {
+                        consume();
+                    }
+                    while (token.getKind() != IToken.Kind.EOF && token.getKind() != IToken.Kind.KW_END) {
+                        Statement statement = handleBeginStatement(token);
+                        if (!(statement instanceof StatementEmpty)) {
+                            statements.add(statement);
+                        }
+                        consume();
+                    }
+                    return new StatementBlock(firstToken, statements);
+                }
+                case KW_CONST -> {
+                    IToken ident;
+                    do {
+                        if (this.token.getKind() == IToken.Kind.IDENT) {
+                            ident = this.token;
                             consume();
+                            if (this.token.getKind() == IToken.Kind.EQ) {
+                                consume();
+                            } else {
+                                throw new SyntaxException();
+                            }
+                            switch (this.token.getKind()) {
+                                case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getIntValue()));
+                                case STRING_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getStringValue()));
+                                case BOOLEAN_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getBooleanValue()));
+                                default -> throw new SyntaxException();
+                            }
+                            consume();
+                            if (this.token.getKind() == IToken.Kind.COMMA) consume();
                         } else {
                             throw new SyntaxException();
                         }
-                        switch (this.token.getKind()) {
-                            case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getIntValue()));
-                            case STRING_LIT ->
-                                    constDecs.add(new ConstDec(firstToken, ident, this.token.getStringValue()));
-                            case BOOLEAN_LIT ->
-                                    constDecs.add(new ConstDec(firstToken, ident, this.token.getBooleanValue()));
-                            default -> throw new SyntaxException();
-                        }
-                        consume();
-                        if (this.token.getKind() == IToken.Kind.COMMA) consume();
-                    } else {
-                        throw new SyntaxException();
-                    }
-                } while (this.token.getKind() != IToken.Kind.SEMI);
-                return new StatementEmpty(firstToken);
-            }
-            case QUESTION -> {
-                return new StatementInput(firstToken, new Ident(this.token));
-            }
-            case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
-                return new StatementOutput(token, getExpression(token));
-            }
-            default -> {
-                return new StatementEmpty(token);
+                    } while (this.token.getKind() != IToken.Kind.SEMI);
+//                    return new StatementEmpty(firstToken);
+                    consume();
+                    startToken = this.token;
+                }
+                case QUESTION -> {
+                    return new StatementInput(firstToken, new Ident(this.token));
+                }
+                case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
+                    return new StatementOutput(startToken, getExpression(startToken));
+                }
+                default -> {
+                    return new StatementEmpty(startToken);
+                }
             }
         }
+        return new StatementEmpty(firstToken);
     }
 
     private Statement handleBeginStatement(IToken startToken) throws LexicalException, SyntaxException {
@@ -134,6 +164,10 @@ public class Parser implements IParser {
                     consume();
                     return new StatementCall(firstToken, new Ident(this.token));
                 }
+                case KW_IF, KW_WHILE -> {
+                    consume();
+                    return handleIfStatement(startToken);
+                }
                 default -> {
                     return new StatementEmpty(startToken);
                 }
@@ -142,11 +176,42 @@ public class Parser implements IParser {
         return new StatementEmpty(startToken);
     }
 
+    private Statement handleIfStatement(IToken startToken) throws LexicalException, SyntaxException {
+        List<IToken> tokens = new ArrayList<>();
+        Statement statement;
+
+        while (token.getKind() != IToken.Kind.SEMI && ((startToken.getKind() == IToken.Kind.KW_IF &&
+                token.getKind() != IToken.Kind.KW_THEN) ||(startToken.getKind() == IToken.Kind.KW_WHILE &&
+                token.getKind() != IToken.Kind.KW_DO))) {
+            if (!isConditionalOperator(token)) {
+                tokens.add(token);
+            }
+            consume();
+        }
+        consume();
+        statement = getStatement(token);
+//        Ident ident = new Ident(tokens.get(0));
+//        ident.setDec(new VarDec(firstToken, tokens.get(0)));
+        Expression expression = new ExpressionIdent(tokens.get(0));
+        consume();
+        if (startToken.getKind() == IToken.Kind.KW_IF) {
+            return new StatementIf(firstToken, getExpression(tokens.get(0)), statement);
+        }
+        else {
+            return new StatementWhile(firstToken, getExpression(tokens.get(0)), statement);
+        }
+    }
+
+    private boolean isConditionalOperator(IToken token) {
+        IToken.Kind kind = token.getKind();
+        return kind == IToken.Kind.EQ || kind == IToken.Kind.LT  || kind == IToken.Kind.GT
+                || kind == IToken.Kind.LE  || kind == IToken.Kind.GE;
+    }
+
     private static void throwSyntaxException(IToken token) throws SyntaxException {
         throw new SyntaxException("Expected token ident inside BEGIN, Found " + token.getKind(),
                 token.getSourceLocation().line(), token.getSourceLocation().line());
     }
-
 
     private Expression handlePrimaryExpression(IToken token) throws LexicalException, SyntaxException {
         // TODO: Handle ( <expression> )
