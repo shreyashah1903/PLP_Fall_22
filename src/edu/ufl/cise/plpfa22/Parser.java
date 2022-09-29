@@ -221,6 +221,11 @@ public class Parser implements IParser {
             case NUM_LIT -> expression = new ExpressionNumLit(token);
             case STRING_LIT -> expression = new ExpressionStringLit(token);
             case BOOLEAN_LIT -> expression = new ExpressionBooleanLit(token);
+            case LPAREN -> {
+                consume(); // LPAREN
+                expression = handleExpression(this.token);
+                if (this.token.getKind() != IToken.Kind.RPAREN) throw new SyntaxException();
+            }
             default -> throw new SyntaxException();
         }
         consume();
@@ -264,7 +269,8 @@ public class Parser implements IParser {
         Expression operand2 = null;
         IToken operator = null;
         IToken.Kind kind = this.token.getKind();
-        if(!isValidOperator(kind) && kind != IToken.Kind.DOT) throw new SyntaxException();
+        System.out.println("token kind= " + kind + " " + String.valueOf(this.token.getText()));
+        if(!isValidOperator(kind) && kind != IToken.Kind.DOT && kind != IToken.Kind.RPAREN) throw new SyntaxException();
         while (isExpressionOperand(this.token.getKind())) {
             operator = this.token;
             if (isExpressionOperand(this.token.getKind())) consume();
