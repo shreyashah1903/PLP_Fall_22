@@ -801,7 +801,7 @@ class ParserTest {
 		Statement v7 = ((StatementWhile) v4).statement;
 		assertThat("", v7, instanceOf(StatementAssign.class));
 		assertEquals("a", String.valueOf(((StatementAssign) v7).ident.getText()));
-		Expression v8 = ((StatementWhile) v4).expression;
+		Expression v8 = ((StatementAssign) v7).expression;
 		assertThat("", v8, instanceOf(ExpressionBinary.class));
 		assertThat("", ((ExpressionBinary) v8).e0, instanceOf(ExpressionNumLit.class));
 		assertEquals("3", String.valueOf(((ExpressionBinary) v8).e0.getFirstToken().getText()));
