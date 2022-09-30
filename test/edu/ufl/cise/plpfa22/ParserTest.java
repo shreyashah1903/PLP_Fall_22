@@ -888,6 +888,47 @@ class ParserTest {
 		assertEquals("\"Number 1 is larger than number 2\"", String.valueOf(v7.getFirstToken().getText()));
 	}
 
+	@Test
+	void test24() throws PLPException {
+		String input = """
+				! 0. abc
+				 """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void test25() throws PLPException {
+		String input = """
+				CONST abc = 1, bcd = 2;
+				.
+				 """;
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(2, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(0, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+	}
+
+	// Invalid since CONST should end with ;
+	@Test
+	void test26() throws PLPException {
+		String input = """
+				CONST abc = 1, bcd = 2
+				.
+				 """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
 
 	// Tests added from Google doc
 	@Test
