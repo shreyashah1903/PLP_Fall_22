@@ -101,11 +101,8 @@ public class Parser implements IParser {
                         if (this.token.getKind() == IToken.Kind.IDENT) {
                             ident = this.token;
                             consume();
-                            if (this.token.getKind() == IToken.Kind.EQ) {
-                                consume();
-                            } else {
-                                throw new SyntaxException();
-                            }
+                            match(IToken.Kind.EQ);
+                            consume();
                             switch (this.token.getKind()) {
                                 case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getIntValue()));
                                 case STRING_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getStringValue()));
@@ -135,7 +132,7 @@ public class Parser implements IParser {
         }
         if(this.token.getKind() == IToken.Kind.DOT){
             consume();
-            if(this.token.getKind() != IToken.Kind.EOF) throw new SyntaxException();
+            match(IToken.Kind.EOF);
         }
         return new StatementEmpty(firstToken);
     }
@@ -227,7 +224,7 @@ public class Parser implements IParser {
             case LPAREN -> {
                 consume(); // LPAREN
                 expression = handleExpression(this.token);
-                if (this.token.getKind() != IToken.Kind.RPAREN) throw new SyntaxException();
+                match(IToken.Kind.RPAREN);
             }
             default -> throw new SyntaxException();
         }
@@ -302,6 +299,10 @@ public class Parser implements IParser {
 
     private void consume() throws LexicalException {
         token = lexer.next();
+    }
+
+    private void match(IToken.Kind kind) throws SyntaxException {
+        if(this.token.getKind() != kind) throw new SyntaxException();
     }
 
     private Expression getExpression(IToken token) {
