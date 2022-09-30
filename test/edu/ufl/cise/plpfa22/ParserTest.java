@@ -812,7 +812,7 @@ class ParserTest {
 	void test21() throws PLPException {
 		String input = """
     			PROCEDURE m;
-    				! "Procedure is working."
+    				! "Procedure is working.";
     			.
 				""";
 		ASTNode ast = getAST(input);
@@ -862,7 +862,7 @@ class ParserTest {
 	@Test
 	void test23() throws PLPException {
 		String input = """
-    			WHILE (x > y) DO ! \"Number 1 is larger than number 2\";
+    			WHILE (x > y) DO ! \"Number 1 is larger than number 2\"
     			.
 				""";
 		ASTNode ast = getAST(input);

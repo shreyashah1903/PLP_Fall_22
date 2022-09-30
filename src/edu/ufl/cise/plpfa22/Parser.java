@@ -13,7 +13,7 @@ public class Parser implements IParser {
     private IToken token;
 
     private final ILexer lexer;
-    private boolean isBeginParentBlock;
+    private boolean isBeginOrProcParentBlock;
 
     public Parser(ILexer lexer) {
         this.lexer = lexer;
@@ -44,59 +44,63 @@ public class Parser implements IParser {
         List<VarDec> varDecs = new ArrayList<>();
         List<ProcDec> procedureDecs = new ArrayList<>();
         Statement statement = new StatementEmpty(startToken);
-      while (token.getKind() != IToken.Kind.DOT) {
-          switch (token.getKind()) {
-              case KW_CONST -> {
-                  consume();
-                  IToken ident;
-                  do {
-                      if (token.getKind() == IToken.Kind.IDENT) {
-                          ident = token;
-                          consume();
-                          match(IToken.Kind.EQ);
-                          consume();
-                          switch (token.getKind()) {
-                              case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, token.getIntValue()));
-                              case STRING_LIT -> constDecs.add(new ConstDec(firstToken, ident, token.getStringValue()));
-                              case BOOLEAN_LIT -> constDecs.add(new ConstDec(firstToken, ident, token.getBooleanValue()));
-                              default -> throw new SyntaxException();
-                          }
-                          consume();
-                          if (token.getKind() == IToken.Kind.COMMA) consume();
-                      } else {
-                          throw new SyntaxException();
-                      }
-                  } while (token.getKind() != IToken.Kind.SEMI);
-                  consume();
-              }
-              case KW_VAR -> {
-                  consume();
-                  while (this.token.getKind() != IToken.Kind.SEMI) {
-                      if (this.token.getKind() == IToken.Kind.IDENT) {
-                          varDecs.add(new VarDec(firstToken, this.token));
-                      }
-                      consume();
-                  }
-                  consume();
-              }
-              case KW_PROCEDURE -> {
-                  consume();
-                  match(IToken.Kind.IDENT);
-                  if (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
-                      IToken ident = token;
-                      consume();
-                      match(IToken.Kind.SEMI);
-                      consume();
-                      Block block = handleBlock(token);
-                      procedureDecs.add(new ProcDec(firstToken, ident, block));
-                  }
-              }
-              default -> statement = handleStatement(startToken);
-          }
-          if (statement instanceof StatementBlock || statement instanceof StatementCall) {
-              break;
-          }
-      }
+        while (token.getKind() != IToken.Kind.DOT) {
+            switch (token.getKind()) {
+                case KW_CONST -> {
+                    consume();
+                    IToken ident;
+                    do {
+                        if (token.getKind() == IToken.Kind.IDENT) {
+                            ident = token;
+                            consume();
+                            match(IToken.Kind.EQ);
+                            consume();
+                            switch (token.getKind()) {
+                                case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, token.getIntValue()));
+                                case STRING_LIT ->
+                                        constDecs.add(new ConstDec(firstToken, ident, token.getStringValue()));
+                                case BOOLEAN_LIT ->
+                                        constDecs.add(new ConstDec(firstToken, ident, token.getBooleanValue()));
+                                default -> throw new SyntaxException();
+                            }
+                            consume();
+                            if (token.getKind() == IToken.Kind.COMMA) consume();
+                        } else {
+                            throw new SyntaxException();
+                        }
+                    } while (token.getKind() != IToken.Kind.SEMI);
+                    consume();
+                }
+                case KW_VAR -> {
+                    consume();
+                    while (this.token.getKind() != IToken.Kind.SEMI) {
+                        if (this.token.getKind() == IToken.Kind.IDENT) {
+                            varDecs.add(new VarDec(firstToken, this.token));
+                        }
+                        consume();
+                    }
+                    consume();
+                }
+                case KW_PROCEDURE -> {
+                    consume();
+                    match(IToken.Kind.IDENT);
+                    if (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
+                        IToken ident = token;
+                        consume();
+                        match(IToken.Kind.SEMI);
+                        consume();
+                        isBeginOrProcParentBlock = true;
+                        Block block = handleBlock(token);
+                        procedureDecs.add(new ProcDec(firstToken, ident, block));
+                        isBeginOrProcParentBlock = false;
+                    }
+                }
+                default -> statement = handleStatement(startToken);
+            }
+            if (statement instanceof StatementBlock || statement instanceof StatementCall) {
+                break;
+            }
+        }
         return new Block(firstToken, constDecs, varDecs, procedureDecs, statement);
     }
 
@@ -106,7 +110,7 @@ public class Parser implements IParser {
             case BANG -> {
                 consume();
                 Expression expression = handleExpression(startToken);
-                statement =  new StatementOutput(startToken, expression);
+                statement = new StatementOutput(startToken, expression);
             }
             case KW_IF -> {
                 consume();
@@ -126,26 +130,26 @@ public class Parser implements IParser {
                 statement = new StatementWhile(startToken, expression, whileStatement);
             }
             case KW_BEGIN -> {
-                List<Statement> statements =  new ArrayList<>();
+                List<Statement> statements = new ArrayList<>();
                 consume();
-                isBeginParentBlock = true;
+                isBeginOrProcParentBlock = true;
                 while (token.getKind() != IToken.Kind.KW_END) {
                     Statement statement1 = handleStatement(token);
-                    if(token.getKind() == IToken.Kind.SEMI) consume();
+                    if (token.getKind() == IToken.Kind.SEMI) consume();
                     statements.add(statement1);
                 }
                 match(IToken.Kind.KW_END);
                 consume();
-                statement =  new StatementBlock(firstToken, statements);
+                statement = new StatementBlock(firstToken, statements);
                 if (token.getKind() == IToken.Kind.SEMI) {
                     consume();
                 }
-                isBeginParentBlock = false;
+                isBeginOrProcParentBlock = false;
             }
             case QUESTION -> {
                 consume();
                 match(IToken.Kind.IDENT);
-                statement =  new StatementInput(firstToken, new Ident(token));
+                statement = new StatementInput(firstToken, new Ident(token));
                 consume();
             }
             case KW_CALL -> {
@@ -166,9 +170,9 @@ public class Parser implements IParser {
                 statement = new StatementAssign(startToken, new Ident(ident), handleExpression(startToken));
             }
             case STRING_LIT, BOOLEAN_LIT, NUM_LIT -> {
-                statement =  new StatementOutput(startToken, getExpression(startToken));
+                statement = new StatementOutput(startToken, getExpression(startToken));
             }
-            default -> statement =  new StatementEmpty(startToken);
+            default -> statement = new StatementEmpty(startToken);
         }
         return statement;
     }
@@ -236,7 +240,7 @@ public class Parser implements IParser {
         IToken operator;
         IToken.Kind kind = token.getKind();
         System.out.println("token kind= " + kind + " value: " + String.valueOf(token.getText()) + "" +
-                " startToken kind:"+startToken.getKind() + " startTokenValue:"+ Arrays.toString(startToken.getText()));
+                " startToken kind:" + startToken.getKind() + " startTokenValue:" + Arrays.toString(startToken.getText()));
         if (startToken.getKind() != IToken.Kind.KW_IF && startToken.getKind() != IToken.Kind.KW_WHILE) {
             if (isInvalidExprCondition(kind))
                 throwSyntaxException("Invalid expression", token);
@@ -247,7 +251,7 @@ public class Parser implements IParser {
             operand2 = handleAdditiveExpression(token);
             operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
         }
-        if (startToken.getKind() == IToken.Kind.BANG && !isBeginParentBlock) {
+        if (startToken.getKind() == IToken.Kind.BANG && !isBeginOrProcParentBlock) {
             if (token.getKind() == IToken.Kind.SEMI) {
                 throwSyntaxException("Found incorrect semi with bang", token);
             }
@@ -284,7 +288,7 @@ public class Parser implements IParser {
 
     private void match(IToken.Kind kind) throws SyntaxException {
         if (token.getKind() != kind) {
-            throwSyntaxException("Expected "+kind, token);
+            throwSyntaxException("Expected " + kind, token);
         }
     }
 
