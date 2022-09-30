@@ -630,7 +630,7 @@ class ParserTest {
 	// Test the expression with parenthesis
 	void test16() throws PLPException {
 		String input = """
-    			! 40/((4+1)*2);
+    			! 40/((4+1)*2)
     			.
 				""";
 		ASTNode ast = getAST(input);
@@ -679,7 +679,7 @@ class ParserTest {
 	// Test the operator precedence in expression
 	void test17() throws PLPException {
 		String input = """
-    			! 2 + 3 * 4;
+    			! 2 + 3 * 4
     			.
 				""";
 		ASTNode ast = getAST(input);
@@ -846,6 +846,47 @@ class ParserTest {
 		assertEquals("Procedure is working.", v13.getFirstToken().getStringValue());
 	}
 
+	// Test the expression with parenthesis and incorrect semicolon
+	@Test
+	void test22() {
+		String input = """
+    			! 40/((4+1)*2);
+    			.
+				""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void test23() throws PLPException {
+		String input = """
+    			WHILE (x > y) DO ! \"Number 1 is larger than number 2\";
+    			.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(0, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(0, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+		Statement v4 = ((Block) v0).statement;
+		assertThat("", v4, instanceOf(StatementWhile.class));
+		Expression v5 = ((StatementWhile) v4).expression;
+		assertEquals("x", String.valueOf(((ExpressionBinary) v5).e0.getFirstToken().getText()));
+		assertEquals(">", String.valueOf(((ExpressionBinary) v5).op.getText()));
+		assertEquals("y", String.valueOf(((ExpressionBinary) v5).e1.getFirstToken().getText()));
+		Statement v6 = ((StatementWhile) v4).statement;
+		assertThat("", v6, instanceOf(StatementOutput.class));
+		Expression v7 = ((StatementOutput) v6).expression;
+		assertThat("", v7, instanceOf(ExpressionStringLit.class));
+		assertEquals("\"Number 1 is larger than number 2\"", String.valueOf(v7.getFirstToken().getText()));
+	}
 
 
 	// Tests added from Google doc
@@ -1011,7 +1052,7 @@ class ParserTest {
 
 	// Test if you are checking for EOF
 	@Test
-	void test_4() throws PLPException {
+	void test_4() {
 		String input = """
 				VAR abc;
 				. bruh
