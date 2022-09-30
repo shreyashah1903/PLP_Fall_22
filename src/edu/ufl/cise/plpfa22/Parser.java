@@ -110,7 +110,7 @@ public class Parser implements IParser {
                   statement = handleStatement(firstToken);
               }
           }
-          if (statement instanceof StatementBlock) {
+          if (statement instanceof StatementBlock || statement instanceof StatementCall) {
               break;
           }
       }

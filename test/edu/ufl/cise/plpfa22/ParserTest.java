@@ -1,35 +1,14 @@
 package edu.ufl.cise.plpfa22;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import edu.ufl.cise.plpfa22.ast.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
-import edu.ufl.cise.plpfa22.ast.ASTNode;
-import edu.ufl.cise.plpfa22.ast.Block;
-import edu.ufl.cise.plpfa22.ast.ConstDec;
-import edu.ufl.cise.plpfa22.ast.Expression;
-import edu.ufl.cise.plpfa22.ast.ExpressionBinary;
-import edu.ufl.cise.plpfa22.ast.ExpressionBooleanLit;
-import edu.ufl.cise.plpfa22.ast.ExpressionIdent;
-import edu.ufl.cise.plpfa22.ast.ExpressionNumLit;
-import edu.ufl.cise.plpfa22.ast.ExpressionStringLit;
-import edu.ufl.cise.plpfa22.ast.Ident;
-import edu.ufl.cise.plpfa22.ast.ProcDec;
-import edu.ufl.cise.plpfa22.ast.Program;
-import edu.ufl.cise.plpfa22.ast.Statement;
-import edu.ufl.cise.plpfa22.ast.StatementAssign;
-import edu.ufl.cise.plpfa22.ast.StatementBlock;
-import edu.ufl.cise.plpfa22.ast.StatementCall;
-import edu.ufl.cise.plpfa22.ast.StatementEmpty;
-import edu.ufl.cise.plpfa22.ast.StatementIf;
-import edu.ufl.cise.plpfa22.ast.StatementInput;
-import edu.ufl.cise.plpfa22.ast.StatementOutput;
-import edu.ufl.cise.plpfa22.ast.StatementWhile;
-import edu.ufl.cise.plpfa22.ast.VarDec;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ParserTest {
 
@@ -858,15 +837,13 @@ class ParserTest {
 		List<VarDec> v8 = ((Block) v6).varDecs;
 		assertEquals(0, v8.size());
 		List<ProcDec> v9 = ((Block) v6).procedureDecs;
-		assertEquals(1, v9.size());
-		IToken v10 = ((ProcDec) v9.get(0)).ident;
-		assertEquals("m", String.valueOf(v10.getText()));
-		Block v11 = ((ProcDec) v9.get(0)).block;
+		assertEquals(0, v9.size());
+		Block v11 = ((ProcDec) v3.get(0)).block;
 		Statement v12 = ((Block) v11).statement;
 		assertThat("", v12, instanceOf(StatementOutput.class));
 		Expression v13 = ((StatementOutput) v12).expression;
 		assertThat("", v13, instanceOf(ExpressionStringLit.class));
-		assertEquals("Procedure is working.", String.valueOf(v13.getFirstToken().getText()));
+		assertEquals("Procedure is working.", v13.getFirstToken().getStringValue());
 	}
 
 
