@@ -697,10 +697,10 @@ class ParserTest {
 	}
 
 	@Test
-	// Test the expression with parenthesis
+	// Test the operator precedence in expression
 	void test17() throws PLPException {
 		String input = """
-    			! 2+3*4;
+    			! 2 + 3 * 4;
     			.
 				""";
 		ASTNode ast = getAST(input);
@@ -809,6 +809,67 @@ class ParserTest {
 		assertThat("", ((ExpressionBinary) v8).e1, instanceOf(ExpressionNumLit.class));
 		assertEquals("2", String.valueOf(((ExpressionBinary) v8).e1.getFirstToken().getText()));
 	}
+
+
+	@Test
+	// Test the CALL statement (Should fail as CALL <ident> is correct)
+	void test20() throws PLPException {
+		String input = """
+    			BEGIN
+    			CALL a;
+    			CALL 23
+    			END
+    			.
+				""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+
+	@Test
+	// Test the Procedure keyword
+	void test21() throws PLPException {
+		String input = """
+    			PROCEDURE m;
+    				! "Procedure is working."
+    			.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(0, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(0, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(1, v3.size());
+		assertThat("", v3.get(0), instanceOf(ProcDec.class));
+		Statement v4 = ((Block) v0).statement;
+		assertThat("", v4, instanceOf(StatementEmpty.class));
+		IToken v5 = ((ProcDec) v3.get(0)).ident;
+		assertEquals("m", String.valueOf(v5.getText()));
+		Block v6 = ((ProcDec) v3.get(0)).block;
+		assertThat("", v6, instanceOf(Block.class));
+		List<ConstDec> v7 = ((Block) v6).constDecs;
+		assertEquals(0, v7.size());
+		List<VarDec> v8 = ((Block) v6).varDecs;
+		assertEquals(0, v8.size());
+		List<ProcDec> v9 = ((Block) v6).procedureDecs;
+		assertEquals(1, v9.size());
+		IToken v10 = ((ProcDec) v9.get(0)).ident;
+		assertEquals("m", String.valueOf(v10.getText()));
+		Block v11 = ((ProcDec) v9.get(0)).block;
+		Statement v12 = ((Block) v11).statement;
+		assertThat("", v12, instanceOf(StatementOutput.class));
+		Expression v13 = ((StatementOutput) v12).expression;
+		assertThat("", v13, instanceOf(ExpressionStringLit.class));
+		assertEquals("Procedure is working.", String.valueOf(v13.getFirstToken().getText()));
+	}
+
+
 
 	// Tests added from Google doc
 	@Test

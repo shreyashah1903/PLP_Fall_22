@@ -218,7 +218,6 @@ public class Parser implements IParser {
     }
 
     private Expression handlePrimaryExpression(IToken token) throws LexicalException, SyntaxException {
-        // TODO: Handle ( <expression> )
         Expression expression;
         switch (token.getKind()) {
             case IDENT -> expression = new ExpressionIdent(token);
