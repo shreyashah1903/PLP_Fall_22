@@ -120,6 +120,7 @@ public class Parser implements IParser {
                     startToken = this.token;
                 }
                 case QUESTION -> {
+                    match(IToken.Kind.IDENT);
                     return new StatementInput(firstToken, new Ident(this.token));
                 }
                 case STRING_LIT, BOOLEAN_LIT, NUM_LIT, IDENT -> {
