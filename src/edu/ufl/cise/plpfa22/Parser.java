@@ -110,6 +110,9 @@ public class Parser implements IParser {
                   statement = handleStatement(firstToken);
               }
           }
+          if (statement instanceof StatementBlock) {
+              break;
+          }
       }
         Block block = new Block(firstToken, constDecs, varDecs, procedureDecs, statement);
         return block;
