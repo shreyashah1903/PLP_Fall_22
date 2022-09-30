@@ -5,6 +5,7 @@ public class Token implements IToken {
     private final char[] input;
     private final int position;
     private final int len;
+    private final String value;
     private final SourceLocation sourceLocation;
     private String errorMsg;
 
@@ -13,6 +14,7 @@ public class Token implements IToken {
         this.input = input;
         this.position = position;
         this.len = len;
+        this.value = String.valueOf(input, position, len);
         this.sourceLocation = sourceLocation;
         if (errorMsg.length > 0) {
             this.errorMsg = errorMsg[0];
