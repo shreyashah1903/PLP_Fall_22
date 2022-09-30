@@ -28,11 +28,11 @@ public class Parser implements IParser {
 
     @Override
     public ASTNode parse() throws PLPException {
-        Block block = new Block(firstToken, constDecs, varDecs, procedureDecs, getStatement(firstToken));
+        Block block = new Block(firstToken, constDecs, varDecs, procedureDecs, handleStatement(firstToken));
         return new Program(firstToken, block);
     }
 
-    private Statement getStatement(IToken startToken) throws LexicalException, SyntaxException {
+    private Statement handleStatement(IToken startToken) throws LexicalException, SyntaxException {
         if (startToken.getKind() == IToken.Kind.EOF) {
             return new StatementEmpty(firstToken);
         }
@@ -75,7 +75,7 @@ public class Parser implements IParser {
                         startToken = token;
                         // Consuming any BEGIN keyword
                         consume();
-                        Block block = new Block(token, constDecs, varDecs, procedureDecs, getStatement(startToken));
+                        Block block = new Block(token, constDecs, varDecs, procedureDecs, handleStatement(startToken));
                         procedureDecs.add(new ProcDec(firstToken, ident, block));
 //                        consume();
                     }
@@ -163,6 +163,7 @@ public class Parser implements IParser {
                 }
                 case KW_CALL -> {
                     consume();
+                    match(IToken.Kind.IDENT);
                     return new StatementCall(firstToken, new Ident(this.token));
                 }
                 case KW_IF, KW_WHILE -> {
@@ -190,7 +191,7 @@ public class Parser implements IParser {
             consume();
         }
         consume();
-        statement = getStatement(token);
+        statement = handleStatement(token);
 //        Ident ident = new Ident(tokens.get(0));
 //        ident.setDec(new VarDec(firstToken, tokens.get(0)));
         Expression expression = new ExpressionIdent(tokens.get(0));
