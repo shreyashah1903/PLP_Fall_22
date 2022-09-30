@@ -12,8 +12,8 @@ public class Parser implements IParser {
     private IToken token;
 
     private final ILexer lexer;
-    private final List<ConstDec> constDecs = new ArrayList<>();
-    private final List<VarDec> varDecs = new ArrayList<>();
+    private List<ConstDec> constDecs = new ArrayList<>();
+    private List<VarDec> varDecs = new ArrayList<>();
     private final List<ProcDec> procedureDecs = new ArrayList<>();
 
     public Parser(ILexer lexer) {
@@ -28,8 +28,87 @@ public class Parser implements IParser {
 
     @Override
     public ASTNode parse() throws PLPException {
-        Block block = new Block(firstToken, constDecs, varDecs, procedureDecs, handleStatement(firstToken));
+//        Block block = new Block(firstToken, constDecs, varDecs, procedureDecs, handleStatement(firstToken));
+        Block block = handleBlock();
         return new Program(firstToken, block);
+    }
+
+    private Block handleBlock() throws LexicalException, SyntaxException {
+        List<ConstDec> constDecs = new ArrayList<>();
+        List<VarDec> varDecs = new ArrayList<>();
+        List<ProcDec> procedureDecs = new ArrayList<>();
+
+        switch (token.getKind()) {
+            case KW_CONST -> {
+                IToken ident;
+                do {
+                    if (this.token.getKind() == IToken.Kind.IDENT) {
+                        ident = this.token;
+                        consume();
+                        match(IToken.Kind.EQ);
+                        consume();
+                        switch (this.token.getKind()) {
+                            case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getIntValue()));
+                            case STRING_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getStringValue()));
+                            case BOOLEAN_LIT -> constDecs.add(new ConstDec(firstToken, ident, this.token.getBooleanValue()));
+                            default -> throw new SyntaxException();
+                        }
+                        consume();
+                        if (this.token.getKind() == IToken.Kind.COMMA) consume();
+                    } else {
+                        throw new SyntaxException();
+                    }
+                } while (this.token.getKind() != IToken.Kind.SEMI);
+//                    return new StatementEmpty(firstToken);
+                consume();
+            }
+            case KW_VAR -> {
+                while (this.token.getKind() != IToken.Kind.SEMI) {
+                    if (this.token.getKind() == IToken.Kind.IDENT) {
+                        varDecs.add(new VarDec(firstToken, this.token));
+                    }
+                    consume();
+                }
+                consume();
+//                    return new StatementEmpty(startToken);
+//                startToken = this.token;
+            }
+            case KW_PROCEDURE -> {
+//                procedureDecs.add(new ProcDec(firstToken, this.token));
+                consume();
+//                    if (token.getKind() != IToken.Kind.SEMI) {
+//                        throwSyntaxException(token);
+//                    }
+                if (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
+//                        if (token.getKind() != IToken.Kind.IDENT) {
+//                            throwSyntaxException(startToken);
+//                        }
+                    constDecs = new ArrayList<>();
+                    varDecs = new ArrayList<>();
+                    //procedureDecs = new ArrayList<>();
+
+                    IToken ident = token;
+                    // Consuming ident
+                    consume();
+                    //Consuming semi
+                    if (token.getKind() != IToken.Kind.SEMI) {
+                        throwSyntaxException(token);
+                    }
+                    consume();
+//                    startToken = token;
+                    // Consuming any BEGIN keyword
+                    //consume();
+                    Block block = new Block(token, constDecs, varDecs, new ArrayList<>(), handleStatement(token));
+                    System.out.println("Vardec size inside procedure:"+varDecs.size() + " proc size:"+procedureDecs.size());
+                    procedureDecs.add(new ProcDec(firstToken, ident, block));
+//                        consume();
+                }
+//                return new StatementEmpty(startToken);
+            }
+        }
+        Statement statement = handleStatement(firstToken);
+        Block block = new Block(firstToken, constDecs, varDecs, procedureDecs, statement);
+        return block;
     }
 
     private Statement handleStatement(IToken startToken) throws LexicalException, SyntaxException {
@@ -43,44 +122,16 @@ public class Parser implements IParser {
                     Expression expression = handleExpression(this.token);
                     return new StatementOutput(startToken, expression);
                 }
-                case KW_VAR -> {
-                    while (this.token.getKind() != IToken.Kind.SEMI) {
-                        if (this.token.getKind() == IToken.Kind.IDENT) {
-                            varDecs.add(new VarDec(firstToken, this.token));
-                        }
-                        consume();
-                    }
+
+                case KW_IF, KW_WHILE -> {
                     consume();
-//                    return new StatementEmpty(startToken);
+                    return handleIfStatement(startToken);
+                }
+                case KW_THEN -> {
+                    consume();
                     startToken = this.token;
                 }
-                case KW_PROCEDURE -> {
-//                procedureDecs.add(new ProcDec(firstToken, this.token));
-                    //consume();
-                    if (token.getKind() != IToken.Kind.SEMI) {
-                        throwSyntaxException(token);
-                    }
-                    while (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
-//                        if (token.getKind() != IToken.Kind.IDENT) {
-//                            throwSyntaxException(startToken);
-//                        }
-                        IToken ident = token;
-                        // Consuming ident
-                        consume();
-                        //Consuming semi
-                        if (token.getKind() != IToken.Kind.SEMI) {
-                            throwSyntaxException(token);
-                        }
-                        consume();
-                        startToken = token;
-                        // Consuming any BEGIN keyword
-                        consume();
-                        Block block = new Block(token, constDecs, varDecs, procedureDecs, handleStatement(startToken));
-                        procedureDecs.add(new ProcDec(firstToken, ident, block));
-//                        consume();
-                    }
-                    return new StatementEmpty(startToken);
-                }
+
                 case KW_BEGIN -> {
                     List<Statement> statements = new ArrayList<>();
                     if (token.getKind() == IToken.Kind.KW_BEGIN) {
@@ -182,26 +233,39 @@ public class Parser implements IParser {
     private Statement handleIfStatement(IToken startToken) throws LexicalException, SyntaxException {
         List<IToken> tokens = new ArrayList<>();
         Statement statement;
+//        while (token.getKind() != IToken.Kind.SEMI && ((startToken.getKind() == IToken.Kind.KW_IF &&
+//                token.getKind() != IToken.Kind.KW_THEN) ||(startToken.getKind() == IToken.Kind.KW_WHILE &&
+//                token.getKind() != IToken.Kind.KW_DO))) {
+//            if (!isConditionalOperator(token)) {
+//                tokens.add(token);
+//            }
+//            consume();
+//        }
+        IToken token1 = token;
+        Expression expression = handleExpression(startToken);
+//        while ((token1.getKind() != IToken.Kind.KW_THEN) &&(token1.getKind() != IToken.Kind.KW_DO)) {
+//            if (!isConditionalOperator(token1)) {
+//                tokens.add(token1);
+//            }
+//           token1 = lexer.next();
+//        }
+//        Expression expression = handleExpression(tokens.get(0));
+//        consume();
 
-        while (token.getKind() != IToken.Kind.SEMI && ((startToken.getKind() == IToken.Kind.KW_IF &&
-                token.getKind() != IToken.Kind.KW_THEN) ||(startToken.getKind() == IToken.Kind.KW_WHILE &&
-                token.getKind() != IToken.Kind.KW_DO))) {
-            if (!isConditionalOperator(token)) {
-                tokens.add(token);
-            }
-            consume();
-        }
+        // For THEN/DO
         consume();
         statement = handleStatement(token);
 //        Ident ident = new Ident(tokens.get(0));
 //        ident.setDec(new VarDec(firstToken, tokens.get(0)));
-        Expression expression = new ExpressionIdent(tokens.get(0));
-        consume();
+//        Expression expression = new ExpressionIdent(tokens.get(0));
+        //consume();
         if (startToken.getKind() == IToken.Kind.KW_IF) {
-            return new StatementIf(firstToken, getExpression(tokens.get(0)), statement);
+            System.out.println("Creating IF statement this.token:"+this.token.getKind());
+            return new StatementIf(firstToken, expression, statement);
         }
         else {
-            return new StatementWhile(firstToken, getExpression(tokens.get(0)), statement);
+            System.out.println("Creating WHILE statement");
+            return new StatementWhile(firstToken, expression, statement);
         }
     }
 
@@ -212,7 +276,7 @@ public class Parser implements IParser {
     }
 
     private static void throwSyntaxException(IToken token) throws SyntaxException {
-        throw new SyntaxException("Expected token ident inside BEGIN, Found " + token.getKind(),
+        throw new SyntaxException("Expected token IDENT inside BEGIN, Found " + token.getKind(),
                 token.getSourceLocation().line(), token.getSourceLocation().line());
     }
 
@@ -279,7 +343,7 @@ public class Parser implements IParser {
             operand2 = handleAdditiveExpression(this.token);
             operand1 = new ExpressionBinary(firstToken, operand1, operator, operand2);
         }
-        if(this.token.getKind() == IToken.Kind.SEMI) consume();
+        //if(this.token.getKind() == IToken.Kind.SEMI) consume();
         return operand1;
     }
 
