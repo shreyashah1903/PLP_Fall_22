@@ -1104,4 +1104,172 @@ class ParserTest {
 		});
 	}
 
+	@Test
+	void test_5() throws PLPException {
+		String input = """
+               ! \"Spooky Month\";
+               ? input
+               .
+           """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void aTest() throws PLPException
+	{
+		String input = """
+        	PROCEDURE;
+        	.
+    	""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void aTest2() throws PLPException
+	{
+		String input = """
+        	PROCEDURE a;
+   		 	VAR b;
+   		 CONST abc = 5
+        	.
+    	""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	// Siju -> Is this test correct??
+	@Test
+	void aTest3() throws PLPException
+	{
+		String input = """
+        	VAR abc = 5;
+        	! abc
+        	.
+    	""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void aTest4() throws PLPException
+	{
+		String input = """
+        	CONST abc = 012;
+        	.
+    	""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void aTest5() throws PLPException
+	{
+		String input = """
+        	VAR a, b, c;
+        	c := a +-/ b
+       	 
+        	.
+    	""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	// Siju -> Is this test correct??
+	@Test
+	void aTest6() throws PLPException
+	{
+		String input = """
+        	VAR a b c;
+        	.
+    	""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+
+	//testing comments
+	@Test
+	void aTest7() throws PLPException
+	{
+		String input = """
+        	//VAR ignore this;
+        	VAR var1;
+        	.
+    	""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(0, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(1, v2.size());
+		assertThat("", v2.get(0), instanceOf(VarDec.class));
+		IToken v3 = ((VarDec) v2.get(0)).ident;
+		assertEquals("var1", String.valueOf(v3.getText()));
+		List<ProcDec> v4 = ((Block) v0).procedureDecs;
+		assertEquals(0, v4.size());
+		Statement v5 = ((Block) v0).statement;
+		assertThat("", v5, instanceOf(StatementEmpty.class));
+
+	}
+
+	@Test
+	void aTest8() throws PLPException
+	{
+		String input = """
+        	CONST TRUE = 1;
+        	.
+    	""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void aTest9() throws PLPException {
+		String input = """
+   		 WHILE "xyz"
+   		 DO
+   		 .
+   		 """;
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(0, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(0, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+		Statement v4 = ((Block) v0).statement;
+		assertThat("", v4, instanceOf(StatementWhile.class));
+		Expression v5 = ((StatementWhile) v4).expression;
+		assertThat("", v5, instanceOf(ExpressionStringLit.class));
+		IToken v6 = ((ExpressionStringLit) v5).firstToken;
+		assertEquals("xyz", v6.getStringValue());
+		Statement v7 = ((StatementWhile) v4).statement;
+		assertThat("", v7, instanceOf(StatementEmpty.class));
+	}
+
+
+
 }

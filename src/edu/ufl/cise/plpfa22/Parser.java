@@ -81,11 +81,15 @@ public class Parser implements IParser {
                 }
                 case KW_VAR -> {
                     consume();
-                    while (this.token.getKind() != IToken.Kind.SEMI) {
-                        if (this.token.getKind() == IToken.Kind.IDENT) {
-                            varDecs.add(new VarDec(firstToken, this.token));
+                    while (token.getKind() != IToken.Kind.SEMI) {
+                        if (token.getKind() == IToken.Kind.IDENT) {
+                            varDecs.add(new VarDec(firstToken, token));
                         }
                         consume();
+//                        IToken.Kind kind = token.getKind();
+//                        if (kind != IToken.Kind.IDENT && kind != IToken.Kind.SEMI && kind != IToken.Kind.COMMA && kind != IToken.Kind.EQ) {
+//                            throwSyntaxException("Expected COMMA, EQ, IDENT after VAR declaration", token);
+//                        }
                     }
                     consume();
                 }
