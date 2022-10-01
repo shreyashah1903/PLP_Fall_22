@@ -15,6 +15,8 @@ public class Parser implements IParser {
     private final ILexer lexer;
     private boolean isBeginOrProcParentBlock;
 
+    private static final boolean SHOW_OUTPUT = false;
+
     public Parser(ILexer lexer) {
         this.lexer = lexer;
         try {
@@ -22,6 +24,12 @@ public class Parser implements IParser {
             token = firstToken;
         } catch (LexicalException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void printOutput(Object text) {
+        if (SHOW_OUTPUT) {
+            System.out.println(text);
         }
     }
 
@@ -169,9 +177,7 @@ public class Parser implements IParser {
                 consume();
                 statement = new StatementAssign(startToken, new Ident(ident), handleExpression(startToken));
             }
-            case STRING_LIT, BOOLEAN_LIT, NUM_LIT -> {
-                statement = new StatementOutput(startToken, getExpression(startToken));
-            }
+            case STRING_LIT, BOOLEAN_LIT, NUM_LIT -> statement = new StatementOutput(startToken, getExpression(startToken));
             default -> statement = new StatementEmpty(startToken);
         }
         return statement;
@@ -185,7 +191,7 @@ public class Parser implements IParser {
 
     private Expression handlePrimaryExpression(IToken itoken) throws LexicalException, SyntaxException {
         Expression expression;
-        System.out.println("itoken = " + token.getKind());
+        printOutput("itoken = " + token.getKind());
         switch (token.getKind()) {
             case IDENT -> expression = new ExpressionIdent(token);
             case NUM_LIT -> expression = new ExpressionNumLit(token);
@@ -239,7 +245,7 @@ public class Parser implements IParser {
         Expression operand2;
         IToken operator;
         IToken.Kind kind = token.getKind();
-        System.out.println("token kind= " + kind + " value: " + String.valueOf(token.getText()) + "" +
+        printOutput("token kind= " + kind + " value: " + String.valueOf(token.getText()) + "" +
                 " startToken kind:" + startToken.getKind() + " startTokenValue:" + Arrays.toString(startToken.getText()));
         if (startToken.getKind() != IToken.Kind.KW_IF && startToken.getKind() != IToken.Kind.KW_WHILE) {
             if (isInvalidExprCondition(kind))
@@ -306,10 +312,7 @@ public class Parser implements IParser {
             case IDENT -> {
                 return new ExpressionIdent(token);
             }
-            default -> {
-                throw new SyntaxException();
-//                throwSyntaxException("Token should be (NUM_LIT, BOOLEAN_LIT, STRING_LIT or IDENT", token);
-            }
+            default -> throw new SyntaxException();
         }
     }
 }

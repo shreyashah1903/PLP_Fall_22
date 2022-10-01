@@ -18,7 +18,7 @@ public class Lexer implements ILexer {
 
     private final List<Character> allowedStringLit = Arrays.asList('b', 't', 'n', 'f', 'r', '\"', '\'', '\\');
 
-    private static final boolean SHOW_OUTPUT = true;
+    private static final boolean SHOW_OUTPUT = false;
 
     enum State {
         START,
