@@ -52,7 +52,7 @@ public class Parser implements IParser {
         List<VarDec> varDecs = new ArrayList<>();
         List<ProcDec> procedureDecs = new ArrayList<>();
         Statement statement = new StatementEmpty(startToken);
-        while (token.getKind() != IToken.Kind.DOT) {
+        while (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
             switch (token.getKind()) {
                 case KW_CONST -> {
                     consume();
@@ -117,7 +117,7 @@ public class Parser implements IParser {
                 }
                 default -> statement = handleStatement(startToken);
             }
-            if (statement instanceof StatementBlock || statement instanceof StatementCall) {
+            if (statement instanceof StatementBlock || statement instanceof StatementCall || statement instanceof StatementAssign) {
                 break;
             }
         }
@@ -125,7 +125,7 @@ public class Parser implements IParser {
     }
 
     private Statement handleStatement(IToken startToken) throws LexicalException, SyntaxException {
-        Statement statement;
+        Statement statement = new StatementEmpty(startToken);
         switch (token.getKind()) {
             case BANG -> {
                 consume();
@@ -188,6 +188,7 @@ public class Parser implements IParser {
                 consume();
                 statement = new StatementAssign(startToken, new Ident(ident), handleExpression(startToken));
             }
+            case RPAREN -> throwSyntaxException("Illegal RPAREN token without LPAREN", token);
             case STRING_LIT, BOOLEAN_LIT, NUM_LIT ->
                     statement = new StatementOutput(startToken, getExpression(startToken));
             default -> statement = new StatementEmpty(startToken);

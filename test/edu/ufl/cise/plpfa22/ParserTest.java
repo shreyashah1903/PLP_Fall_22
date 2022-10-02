@@ -1271,6 +1271,447 @@ class ParserTest {
 		assertThat("", v7, instanceOf(StatementEmpty.class));
 	}
 
+    @Test
+	void missingDot() throws PLPException {
+		String input = """
+        CONST a = 3;
+        """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void tokenFollowingProgram() throws PLPException {
+		String input = """
+        .abc
+        """;
+		assertThrows(SyntaxException.class, () -> {
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void invalidConstDec() throws PLPException {
+		String input = """
+        CONST alpha = /;
+        """;
+		assertThrows(SyntaxException.class, () -> {
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void constAndVarDecs0() throws PLPException {
+		String input = """
+            CONST alpha = 0;
+            VAR beta;
+            .
+        """;
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = v0.constDecs;
+		assertEquals(1, v1.size());
+		ConstDec v2 = v1.get(0);
+		assertEquals(0, (Integer) v2.val);
+		assertEquals("alpha", String.valueOf(v2.ident.getText()));
+		List<VarDec> v3 = v0.varDecs;
+		VarDec v4 = v3.get(0);
+		assertEquals("beta", String.valueOf(v4.ident.getText()));
+	}
+
+	@Test
+	void constAndVarDecs1() throws PLPException {
+		String input = """
+            CONST alpha = 0, beta = "string";
+            CONST gamma = TRUE;
+            VAR a, b;
+            VAR c;
+            .
+        """;
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = v0.constDecs;
+		assertEquals(3, v1.size());
+		ConstDec v2 = v1.get(0);
+		assertEquals("alpha", String.valueOf(v2.ident.getText()));
+		assertEquals(0, (Integer) v2.val);
+		ConstDec v3 = v1.get(1);
+		assertEquals("beta", String.valueOf(v3.ident.getText()));
+		assertEquals("string", (String) v3.val);
+		ConstDec v4 = v1.get(2);
+		assertEquals("gamma", String.valueOf(v4.ident.getText()));
+		assertEquals(true, (Boolean) v4.val);
+		List<VarDec> v5 = v0.varDecs;
+		assertEquals(3, v5.size());
+		VarDec v6 = v5.get(0);
+		assertEquals("a", String.valueOf(v6.ident.getText()));
+		VarDec v7 = v5.get(1);
+		assertEquals("b", String.valueOf(v7.ident.getText()));
+		VarDec v8 = v5.get(2);
+		assertEquals("c", String.valueOf(v8.ident.getText()));
+	}
+
+	@Test
+	void multipleProcedures() throws PLPException {
+		String input = """
+        PROCEDURE a;
+        alpha := 1;
+        PROCEDURE b;
+        VAR beta;
+        beta := FALSE;
+        .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		Block mainBlock = program.block;
+		assertEquals(2, mainBlock.procedureDecs.size());
+		ProcDec firstProc = mainBlock.procedureDecs.get(0);
+		assertEquals("a", String.valueOf(firstProc.ident.getText()));
+		Block firstProcBlock = firstProc.block;
+		StatementAssign firstProcAssignment = (StatementAssign) firstProcBlock.statement;
+		assertEquals("alpha", String.valueOf(firstProcAssignment.ident.getText()));
+		assertEquals(1, firstProcAssignment.expression.firstToken.getIntValue());
+		ProcDec secondProc = mainBlock.procedureDecs.get(1);
+		assertEquals("b", String.valueOf(secondProc.ident.getText()));
+		Block secondProcBlock = secondProc.block;
+		List<VarDec> secondProcVarDecs = secondProcBlock.varDecs;
+		VarDec secondProcVarDec = secondProcVarDecs.get(0);
+		assertEquals("beta", String.valueOf(secondProcVarDec.ident.getText()));
+		StatementAssign secondProcAssignment = (StatementAssign) secondProcBlock.statement;
+		assertEquals("beta", String.valueOf(secondProcAssignment.ident.getText()));
+		assertEquals(false, secondProcAssignment.expression.firstToken.getBooleanValue());
+	}
+
+	@Test
+	void assignment0() throws PLPException {
+		String input = """
+        a := 5.
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementAssign statement = (StatementAssign) program.block.statement;
+		assertEquals("a", String.valueOf(statement.ident.getText()));
+		assertEquals(5, statement.expression.firstToken.getIntValue());
+	}
+
+	@Test
+	void assignment1() throws PLPException {
+		String input = """
+        a := b < 5 # FALSE
+        .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementAssign statement = (StatementAssign) program.block.statement;
+		assertEquals("a", String.valueOf(statement.ident.getText()));
+		ExpressionBinary expression = (ExpressionBinary) statement.expression;
+		assertEquals(IToken.Kind.NEQ, expression.op.getKind());
+		ExpressionBinary leftBooleanExpresison = (ExpressionBinary) expression.e0;
+		assertEquals(IToken.Kind.LT, leftBooleanExpresison.op.getKind());
+		ExpressionIdent b = (ExpressionIdent) leftBooleanExpresison.e0;
+		assertEquals("b", String.valueOf(b.firstToken.getText()));
+		assertEquals(IToken.Kind.IDENT, b.firstToken.getKind());
+		ExpressionNumLit five = (ExpressionNumLit) leftBooleanExpresison.e1;
+		assertEquals(5, five.firstToken.getIntValue());
+		ExpressionBooleanLit right = (ExpressionBooleanLit) expression.e1;
+		assertEquals(false, right.firstToken.getBooleanValue());
+	}
+
+	@Test
+	void assignment2() throws PLPException {
+		String input = """
+        a := b + c - 1
+        .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementAssign statement = (StatementAssign) program.block.statement;
+		assertEquals("a", String.valueOf(statement.ident.getText()));
+		ExpressionBinary expression = (ExpressionBinary) statement.expression;
+		assertEquals(IToken.Kind.MINUS, expression.op.getKind());
+		ExpressionBinary leftBooleanExpresison = (ExpressionBinary) expression.e0;
+		assertEquals(IToken.Kind.PLUS, leftBooleanExpresison.op.getKind());
+		ExpressionIdent b = (ExpressionIdent) leftBooleanExpresison.e0;
+		assertEquals("b", String.valueOf(b.firstToken.getText()));
+		assertEquals(IToken.Kind.IDENT, b.firstToken.getKind());
+		ExpressionIdent c = (ExpressionIdent) leftBooleanExpresison.e1;
+		assertEquals("c", String.valueOf(c.firstToken.getText()));
+		assertEquals(IToken.Kind.IDENT, c.firstToken.getKind());
+		ExpressionNumLit right = (ExpressionNumLit) expression.e1;
+		assertEquals(1, right.firstToken.getIntValue());
+	}
+
+	@Test
+	void assignment3() throws PLPException {
+		String input = """
+        a := b * 12 / 1
+        .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementAssign statement = (StatementAssign) program.block.statement;
+		assertEquals("a", String.valueOf(statement.ident.getText()));
+		ExpressionBinary expression = (ExpressionBinary) statement.expression;
+		assertEquals(IToken.Kind.DIV, expression.op.getKind());
+		ExpressionBinary leftBooleanExpresison = (ExpressionBinary) expression.e0;
+		assertEquals(IToken.Kind.TIMES, leftBooleanExpresison.op.getKind());
+		ExpressionIdent b = (ExpressionIdent) leftBooleanExpresison.e0;
+		assertEquals("b", String.valueOf(b.firstToken.getText()));
+		assertEquals(IToken.Kind.IDENT, b.firstToken.getKind());
+		ExpressionNumLit twelve = (ExpressionNumLit) leftBooleanExpresison.e1;
+		assertEquals(12, twelve.firstToken.getIntValue());
+		ExpressionNumLit right = (ExpressionNumLit) expression.e1;
+		assertEquals(1, right.firstToken.getIntValue());
+	}
+
+	@Test
+	void assignment4() throws PLPException {
+		String input = """
+        a := "test".
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementAssign statement = (StatementAssign) program.block.statement;
+		assertEquals("a", String.valueOf(statement.ident.getText()));
+		assertEquals("test", statement.expression.firstToken.getStringValue());
+	}
+
+	@Test
+	void output0() throws PLPException {
+		String input = """
+        ! 3 + 4 * 5 < a * b
+        .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementOutput statement = (StatementOutput) program.block.statement;
+		ExpressionBinary expression = (ExpressionBinary) statement.expression;
+		assertEquals(IToken.Kind.LT, expression.op.getKind());
+		ExpressionBinary leftOfInequality = (ExpressionBinary) expression.e0;
+		assertEquals(IToken.Kind.PLUS, leftOfInequality.op.getKind());
+		ExpressionNumLit three = (ExpressionNumLit) leftOfInequality.e0;
+		assertEquals(3, three.firstToken.getIntValue());
+		ExpressionBinary leftProd = (ExpressionBinary) leftOfInequality.e1;
+		assertEquals(IToken.Kind.TIMES, leftProd.op.getKind());
+		ExpressionNumLit four = (ExpressionNumLit) leftProd.e0;
+		assertEquals(4, four.firstToken.getIntValue());
+		ExpressionNumLit five = (ExpressionNumLit) leftProd.e1;
+		assertEquals(5, five.firstToken.getIntValue());
+		ExpressionBinary rightOfInequality = (ExpressionBinary) expression.e1;
+		assertEquals(IToken.Kind.TIMES, rightOfInequality.op.getKind());
+		ExpressionIdent a = (ExpressionIdent) rightOfInequality.e0;
+		assertEquals("a", String.valueOf(a.firstToken.getText()));
+		ExpressionIdent b = (ExpressionIdent) rightOfInequality.e1;
+		assertEquals("b", String.valueOf(b.firstToken.getText()));
+	}
+
+	@Test
+	void output1() throws PLPException {
+		String input = """
+            ! 3 + (4 - 5)
+            .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementOutput statementOutput = (StatementOutput) program.block.statement;
+		ExpressionBinary mainExpr = (ExpressionBinary) statementOutput.expression;
+		assertEquals(IToken.Kind.PLUS, mainExpr.op.getKind());
+		ExpressionNumLit three = (ExpressionNumLit) mainExpr.e0;
+		assertEquals(3, three.firstToken.getIntValue());
+		ExpressionBinary parenthesisExpr = (ExpressionBinary) mainExpr.e1;
+		assertEquals(IToken.Kind.MINUS, parenthesisExpr.op.getKind());
+		ExpressionNumLit four = (ExpressionNumLit) parenthesisExpr.e0;
+		assertEquals(4, four.firstToken.getIntValue());
+		ExpressionNumLit five = (ExpressionNumLit) parenthesisExpr.e1;
+		assertEquals(5, five.firstToken.getIntValue());
+	}
+
+	@Test
+	void call0() throws PLPException {
+		String input = """
+            PROCEDURE p;
+            a := 3;
+        CALL p.
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		List<ProcDec> procDecs = program.block.procedureDecs;
+		assertEquals(1, procDecs.size());
+		ProcDec proc = procDecs.get(0);
+		assertEquals("p", String.valueOf(proc.ident.getText()));
+		StatementAssign assign = (StatementAssign) proc.block.statement;
+		assertEquals("a", String.valueOf(assign.ident.getText()));
+		assertEquals(3, assign.expression.firstToken.getIntValue());
+		StatementCall call = (StatementCall) program.block.statement;
+		assertEquals("p", String.valueOf(call.ident.getText()));
+	}
+
+	@Test
+	void input0() throws PLPException {
+		String input = """
+        ? input.
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementInput statement = (StatementInput) program.block.statement;
+		assertEquals("input", String.valueOf(statement.ident.getText()));
+	}
+
+	@Test
+	void ifThen0() throws PLPException {
+		String input = """
+            IF b > 5 THEN .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementIf ifStatement = (StatementIf) program.block.statement;
+		ExpressionBinary condition = (ExpressionBinary) ifStatement.expression;
+		assertEquals(IToken.Kind.GT, condition.op.getKind());
+		ExpressionIdent b = (ExpressionIdent) condition.e0;
+		assertEquals("b", String.valueOf(b.firstToken.getText()));
+		assertEquals(IToken.Kind.IDENT, b.firstToken.getKind());
+		ExpressionNumLit five = (ExpressionNumLit) condition.e1;
+		assertEquals(5, five.firstToken.getIntValue());
+		assertThat(ifStatement.statement, instanceOf(StatementEmpty.class));
+	}
+
+	@Test
+	void whileDo0() throws PLPException {
+		String input = """
+            WHILE c DO
+            b := b + 1
+            .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementWhile statementWhile = (StatementWhile) program.block.statement;
+		ExpressionIdent c = (ExpressionIdent) statementWhile.expression;
+		assertEquals("c", String.valueOf(c.firstToken.getText()));
+		assertEquals(IToken.Kind.IDENT, c.firstToken.getKind());
+		StatementAssign assignmentStatement = (StatementAssign) statementWhile.statement;
+		assertEquals("b", String.valueOf(assignmentStatement.ident.getText()));
+		ExpressionBinary assignmentExpr = (ExpressionBinary) assignmentStatement.expression;
+		assertEquals(IToken.Kind.PLUS, assignmentExpr.op.getKind());
+		ExpressionIdent b = (ExpressionIdent) assignmentExpr.e0;
+		assertEquals("b", String.valueOf(b.firstToken.getText()));
+		ExpressionNumLit one = (ExpressionNumLit) assignmentExpr.e1;
+		assertEquals(1, one.firstToken.getIntValue());
+	}
+
+	@Test
+	void statementBlock0() throws PLPException {
+		String input = """
+            BEGIN
+            ? input;
+            dur := input / 3600;
+            ! (dur)
+            END .
+        """;
+		ASTNode ast = getAST(input);
+		Program program = (Program) ast;
+		StatementBlock statementBlock = (StatementBlock) program.block.statement;
+		List<Statement> statements = statementBlock.statements;
+		StatementInput statementInput = (StatementInput) statements.get(0);
+		assertEquals("input", String.valueOf(statementInput.ident.getText()));
+		StatementAssign statementAssign = (StatementAssign) statements.get(1);
+		assertEquals("dur", String.valueOf(statementAssign.ident.getText()));
+		ExpressionBinary assignmentExpr = (ExpressionBinary) statementAssign.expression;
+		assertEquals(IToken.Kind.DIV, assignmentExpr.op.getKind());
+		ExpressionIdent inputIdent = (ExpressionIdent) assignmentExpr.e0;
+		assertEquals("input", String.valueOf(inputIdent.firstToken.getText()));
+		ExpressionNumLit num = (ExpressionNumLit) assignmentExpr.e1;
+		assertEquals(3600, num.firstToken.getIntValue());
+		StatementOutput statementOutput = (StatementOutput) statements.get(2);
+		ExpressionIdent dur = (ExpressionIdent) statementOutput.expression;
+		assertEquals("dur", String.valueOf(dur.firstToken.getText()));
+	}
+
+	@Test
+	void missingRightParenthesis() throws PLPException {
+		String input = """
+            ! (right
+        """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void missingLeftParenthesis() throws PLPException {
+		String input = """
+            ! left)
+            .
+        """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void invalidStartOfExpression() throws PLPException {
+		String input = """
+            ! ?
+            .
+        """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void invalidConst() throws PLPException {
+		String input = """
+        CONST a = b;
+        .
+        """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
+	@Test
+	void NickTest() throws PLPException{
+		String input  = """
+				CONST temp = 10, temp2 = TRUE, temp3 = \"HELLO\";
+				VAR temp3;
+					PROCEDURE myProc;
+					VAR temp4;
+					temp4 := 6
+					;
+				temp3 := (10*12)*(4+5) + temp
+				.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block first = ((Program)ast).block;
+		assertEquals(first.procedureDecs.size(),1);
+		assertEquals(String.valueOf(first.procedureDecs.get(0).ident.getText()),"myProc");
+		assertEquals(first.constDecs.size(),3);
+		assertEquals(first.constDecs.get(0).val,10);
+		assertEquals((boolean)first.constDecs.get(1).val,true);
+		assertEquals(String.valueOf(first.constDecs.get(2).val),"HELLO");
+		assertEquals(first.varDecs.size(),1);
+		assertEquals(String.valueOf(first.varDecs.get(0).ident.getText()),"temp3");
+		Block second = (first.procedureDecs.get(0).block);
+		assertEquals(second.varDecs.size(),1);
+		assertEquals(String.valueOf(second.varDecs.get(0).ident.getText()),"temp4");
+		StatementAssign firstAssignment =  (StatementAssign) second.statement;
+		assertEquals(String.valueOf(firstAssignment.ident.getText()),"temp4");
+		StatementAssign secondAssignment =  (StatementAssign) first.statement;
+		assertEquals(String.valueOf(secondAssignment.ident.getText()),"temp3");
+	}
+
+
 
 
 }
