@@ -1145,7 +1145,6 @@ class ParserTest {
 		});
 	}
 
-	// Siju -> Is this test correct??
 	@Test
 	void aTest3() throws PLPException
 	{
@@ -1189,6 +1188,8 @@ class ParserTest {
 	}
 
 	// Siju -> Is this test correct??
+	// Fails because the space is unexpected but our Lexer impl skips spaces and hence we get Tokens in form
+	// VAR,a,b,c, and it looks correct for the Parser. Lexer impl needs to be changed to fix this
 	@Test
 	void aTest6() throws PLPException
 	{
