@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Parser implements IParser {
 
-    private IToken firstToken;
+    private final IToken firstToken;
 
     private IToken token;
 
@@ -50,7 +50,7 @@ public class Parser implements IParser {
         List<ConstDec> constDecs = new ArrayList<>();
         List<VarDec> varDecs = new ArrayList<>();
         List<ProcDec> procedureDecs = new ArrayList<>();
-        Statement statement = new StatementEmpty(startToken);
+        Statement statement = null;
         while (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
             switch (token.getKind()) {
                 case KW_CONST -> {
@@ -122,15 +122,18 @@ public class Parser implements IParser {
                 }
                 default -> statement = handleStatement(startToken);
             }
-            if (statement instanceof StatementBlock || statement instanceof StatementCall || statement instanceof StatementAssign|| statement instanceof StatementOutput) {
+            if (statement != null) {
                 break;
             }
+        }
+        if (statement == null) {
+            statement = new StatementEmpty(startToken);
         }
         return new Block(firstToken, constDecs, varDecs, procedureDecs, statement);
     }
 
     private Statement handleStatement(IToken startToken) throws LexicalException, SyntaxException {
-        Statement statement = new StatementEmpty(startToken);
+        Statement statement;
         switch (token.getKind()) {
             case BANG -> {
                 consume();
@@ -163,7 +166,6 @@ public class Parser implements IParser {
                 }
                 match(IToken.Kind.KW_END);
                 consume();
-                statement = new StatementBlock(firstToken, statements);
                 statement = new StatementBlock(firstToken, statements);
             }
             case QUESTION -> {
