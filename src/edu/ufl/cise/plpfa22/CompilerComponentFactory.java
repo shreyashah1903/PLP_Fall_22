@@ -13,7 +13,7 @@ public class CompilerComponentFactory {
 		return new Lexer(input);
 	}
 
-	public static IParser getParser(ILexer lexer) {
+	public static IParser getParser(ILexer lexer) throws LexicalException{
 		return new Parser(lexer);
 	}
 

@@ -17,13 +17,13 @@ public class Parser implements IParser {
 
     private static final boolean SHOW_OUTPUT = false;
 
-    public Parser(ILexer lexer) {
+    public Parser(ILexer lexer) throws LexicalException {
         this.lexer = lexer;
         try {
             firstToken = lexer.next();
             token = firstToken;
         } catch (LexicalException e) {
-            e.printStackTrace();
+            throw new LexicalException();
         }
     }
 

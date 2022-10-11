@@ -1712,6 +1712,20 @@ class ParserTest {
 	}
 
 
+	// Tests added after the result
+	@Test
+	void test__41() throws LexicalException {
+		String input = """
+			@ abc:=4.
+			""";
+		assertThrows(LexicalException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+
+	}
+
+
 
 
 }
