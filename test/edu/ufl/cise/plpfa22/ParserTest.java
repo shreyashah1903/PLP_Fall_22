@@ -721,7 +721,7 @@ class ParserTest {
 	// Test the Statement If
 	void test18() throws PLPException {
 		String input = """
-    			IF (x > y) THEN ! \"Number 1 is larger than number 2\";
+    			IF (x > y) THEN ! \"Number 1 is larger than number 2\"
     			.
 				""";
 		ASTNode ast = getAST(input);
@@ -751,7 +751,7 @@ class ParserTest {
 	//	Test the Statement While
 	void test19() throws PLPException {
 		String input = """
-    			WHILE 0 < a < 2 DO a:=3*2;
+    			WHILE 0 < a < 2 DO a:=3*2
     			.
 				""";
 		ASTNode ast = getAST(input);
@@ -1725,7 +1725,14 @@ class ParserTest {
 
 	}
 
-
-
-
+	@Test
+	void test__35() throws SyntaxException {
+		String input = """
+			CALL ident;.
+			""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
 }
