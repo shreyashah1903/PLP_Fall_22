@@ -1,31 +1,14 @@
 package edu.ufl.cise.plpfa22;
 
+import edu.ufl.cise.plpfa22.ast.*;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-
-import edu.ufl.cise.plpfa22.ast.ASTNode;
-import edu.ufl.cise.plpfa22.ast.ASTVisitor;
-import edu.ufl.cise.plpfa22.ast.Block;
-import edu.ufl.cise.plpfa22.ast.ConstDec;
-import edu.ufl.cise.plpfa22.ast.Declaration;
-import edu.ufl.cise.plpfa22.ast.Expression;
-import edu.ufl.cise.plpfa22.ast.ExpressionIdent;
-import edu.ufl.cise.plpfa22.ast.Ident;
-import edu.ufl.cise.plpfa22.ast.ProcDec;
-import edu.ufl.cise.plpfa22.ast.Program;
-import edu.ufl.cise.plpfa22.ast.Statement;
-import edu.ufl.cise.plpfa22.ast.StatementBlock;
-import edu.ufl.cise.plpfa22.ast.StatementCall;
-import edu.ufl.cise.plpfa22.ast.StatementEmpty;
-import edu.ufl.cise.plpfa22.ast.StatementInput;
-import edu.ufl.cise.plpfa22.ast.StatementOutput;
-import edu.ufl.cise.plpfa22.ast.VarDec;
 
 class ScopeTest {
 	
@@ -33,7 +16,6 @@ class ScopeTest {
 		IParser parser = CompilerComponentFactory.getParser(CompilerComponentFactory.getLexer(input));
 		ASTNode ast = parser.parse();
 		ASTVisitor scopes = CompilerComponentFactory.getScopeVisitor();
-		CompilerComponentFactory.getScopeVisitor();
 		ast.visit(scopes, null);
 		return ast;
 	}

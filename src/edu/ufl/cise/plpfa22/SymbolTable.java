@@ -16,18 +16,18 @@ public class SymbolTable {
     }
 
 
-    void enterScope() {
+    public void enterScope() {
         stack.push(currentScope++);
     }
 
 
-    void leaveScope() {
+    public void leaveScope() {
         stack.pop();
         currentScope--;
     }
 
 
-    boolean insert(String ident, Declaration dec) {
+    public boolean insert(String ident, Declaration dec) {
 
         IdentInfo info = new IdentInfo(currentScope, dec);
         TreeSet<IdentInfo> identSet = new TreeSet<>(new customComparator());
