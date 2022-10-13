@@ -27,6 +27,10 @@ public class SymbolTable {
     }
 
 
+    public int getCurrentScope() {
+        return currentScope;
+    }
+
     public boolean insert(String ident, Declaration dec) {
 
         IdentInfo info = new IdentInfo(currentScope, dec);

@@ -20,9 +20,7 @@ public class AstVisitorImpl implements ASTVisitor {
             dec.visit(this, arg);
         }
         Statement statement = block.statement;
-        if (statement != null) {
-            statement.visit(this, arg);
-        }
+        statement.visit(this, arg);
         symbolTable.leaveScope();
         return null;
     }
@@ -64,6 +62,7 @@ public class AstVisitorImpl implements ASTVisitor {
         if (declaration == null) {
             throw new ScopeException();
         }
+
         return null;
     }
 
@@ -103,23 +102,28 @@ public class AstVisitorImpl implements ASTVisitor {
     @Override
     public Object visitExpressionIdent(ExpressionIdent expressionIdent, Object arg) throws PLPException {
        Declaration declaration = symbolTable.lookup(String.valueOf(expressionIdent.firstToken.getText()));
+       if (declaration == null) throw new ScopeException();
        expressionIdent.setDec(declaration);
-       return declaration;
+       expressionIdent.setType(declaration.getType());
+       return expressionIdent.getType();
     }
 
     @Override
     public Object visitExpressionNumLit(ExpressionNumLit expressionNumLit, Object arg) throws PLPException {
-        return null;
+        expressionNumLit.setType(Types.Type.NUMBER);
+        return expressionNumLit.getFirstToken().getIntValue();
     }
 
     @Override
     public Object visitExpressionStringLit(ExpressionStringLit expressionStringLit, Object arg) throws PLPException {
-        return null;
+        expressionStringLit.setType(Types.Type.STRING);
+        return expressionStringLit.getFirstToken().getStringValue();
     }
 
     @Override
     public Object visitExpressionBooleanLit(ExpressionBooleanLit expressionBooleanLit, Object arg) throws PLPException {
-        return null;
+        expressionBooleanLit.setType(Types.Type.BOOLEAN);
+        return expressionBooleanLit.getFirstToken().getBooleanValue();
     }
 
     @Override
