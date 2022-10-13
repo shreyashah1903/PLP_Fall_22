@@ -38,6 +38,8 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
+        statementAssign.ident.visit(this, arg);
+        statementAssign.expression.visit(this, arg);
         return null;
     }
 
@@ -168,6 +170,7 @@ public class AstVisitorImpl implements ASTVisitor {
     public Object visitIdent(Ident ident, Object arg) throws PLPException {
         Declaration declaration = symbolTable.lookup(String.valueOf(ident.firstToken.getText()));
         ident.setDec(declaration);
+        ident.setNest(symbolTable.getCurrentScope());
         return null;
     }
 }
