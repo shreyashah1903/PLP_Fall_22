@@ -1,6 +1,5 @@
 package edu.ufl.cise.plpfa22.ast;
 
-import edu.ufl.cise.plpfa22.IToken;
 import edu.ufl.cise.plpfa22.PLPException;
 import edu.ufl.cise.plpfa22.ScopeException;
 import edu.ufl.cise.plpfa22.SymbolTable;
@@ -54,23 +53,22 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
-        statementCall.ident.visit(this, arg);
-        Declaration declaration = symbolTable.lookup(String.valueOf(statementCall.ident.firstToken.getText()));
+        setupIdent(arg, statementCall.ident);
+        return null;
+    }
+
+    private void setupIdent(Object arg, Ident ident) throws PLPException {
+        ident.visit(this, arg);
+        Declaration declaration = symbolTable.lookup(String.valueOf(ident.firstToken.getText()));
         if (declaration == null) {
             throw new ScopeException();
         }
-        statementCall.ident.setNest(symbolTable.getCurrentScope());
-        return null;
+        ident.setNest(symbolTable.getCurrentScope());
     }
 
     @Override
     public Object visitStatementInput(StatementInput statementInput, Object arg) throws PLPException {
-        statementInput.ident.visit(this, arg);
-        Declaration declaration = symbolTable.lookup(String.valueOf(statementInput.ident.firstToken.getText()));
-        if (declaration == null) {
-            throw new ScopeException();
-        }
-        statementInput.ident.setNest(symbolTable.getCurrentScope());
+        setupIdent(arg, statementInput.ident);
         return null;
     }
 
@@ -110,14 +108,15 @@ public class AstVisitorImpl implements ASTVisitor {
     public Object visitExpressionBinary(ExpressionBinary expressionBinary, Object arg) throws PLPException {
         expressionBinary.e0.visit(this, arg);
         expressionBinary.e1.visit(this, arg);
-        IToken.Kind kind = expressionBinary.op.getKind();
         return null;
     }
 
     @Override
     public Object visitExpressionIdent(ExpressionIdent expressionIdent, Object arg) throws PLPException {
        Declaration declaration = symbolTable.lookup(String.valueOf(expressionIdent.firstToken.getText()));
-       if (declaration == null) throw new ScopeException();
+       if (declaration == null) {
+           throw new ScopeException();
+       }
        expressionIdent.setDec(declaration);
        expressionIdent.setType(declaration.getType());
        expressionIdent.setNest(symbolTable.getCurrentScope());
