@@ -13,6 +13,12 @@ public class AstVisitorImpl implements ASTVisitor {
         for (ConstDec dec : block.constDecs) {
             dec.visit(this, arg);
         }
+        for (VarDec dec : block.varDecs) {
+            dec.visit(this, arg);
+        }
+        for (ProcDec dec : block.procedureDecs) {
+            dec.visit(this, arg);
+        }
         Statement statement = block.statement;
         if (statement != null) {
             statement.visit(this, arg);
@@ -34,7 +40,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitVarDec(VarDec varDec, Object arg) throws PLPException {
-        boolean result = symbolTable.insert(String.valueOf(varDec.ident), varDec);
+        boolean result = symbolTable.insert(String.valueOf(varDec.ident.getText()), varDec);
         if (!result) {
             throw new ScopeException();
         }
@@ -43,16 +49,21 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
+        statementCall.ident.visit(this, arg);
+        Declaration declaration = symbolTable.lookup(String.valueOf(statementCall.ident.firstToken.getText()));
+        if (declaration == null) {
+            throw new ScopeException();
+        }
         return null;
     }
 
     @Override
     public Object visitStatementInput(StatementInput statementInput, Object arg) throws PLPException {
-        Declaration declaration = symbolTable.lookup(String.valueOf(statementInput.ident));
+        statementInput.ident.visit(this, arg);
+        Declaration declaration = symbolTable.lookup(String.valueOf(statementInput.ident.firstToken.getText()));
         if (declaration == null) {
             throw new ScopeException();
         }
-
         return null;
     }
 
@@ -68,6 +79,9 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementBlock(StatementBlock statementBlock, Object arg) throws PLPException {
+        for (Statement statement : statementBlock.statements) {
+            statement.visit(this, arg);
+        }
         return null;
     }
 
@@ -110,6 +124,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitProcedure(ProcDec procDec, Object arg) throws PLPException {
+        procDec.block.visit(this, arg);
         return null;
     }
 
@@ -129,6 +144,8 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLPException {
+        Declaration declaration = symbolTable.lookup(String.valueOf(ident.firstToken.getText()));
+        ident.setDec(declaration);
         return null;
     }
 }
