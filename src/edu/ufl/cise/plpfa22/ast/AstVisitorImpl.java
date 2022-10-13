@@ -128,7 +128,13 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitProcedure(ProcDec procDec, Object arg) throws PLPException {
+        boolean result = symbolTable.insert(String.valueOf(procDec.ident.getText()), procDec);
+        if (!result) {
+            throw new ScopeException();
+        }
+        symbolTable.enterScope();
         procDec.block.visit(this, arg);
+        symbolTable.leaveScope();
         return null;
     }
 
