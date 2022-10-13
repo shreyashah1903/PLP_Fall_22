@@ -1,15 +1,15 @@
 package edu.ufl.cise.plpfa22.ast;
 
+import edu.ufl.cise.plpfa22.IToken;
 import edu.ufl.cise.plpfa22.PLPException;
 import edu.ufl.cise.plpfa22.ScopeException;
 import edu.ufl.cise.plpfa22.SymbolTable;
 
 public class AstVisitorImpl implements ASTVisitor {
-    private SymbolTable symbolTable = new SymbolTable();
+    private final SymbolTable symbolTable = new SymbolTable();
 
     @Override
     public Object visitBlock(Block block, Object arg) throws PLPException {
-        symbolTable.enterScope();
         for (ConstDec dec : block.constDecs) {
             dec.visit(this, arg);
         }
@@ -17,11 +17,17 @@ public class AstVisitorImpl implements ASTVisitor {
             dec.visit(this, arg);
         }
         for (ProcDec dec : block.procedureDecs) {
+            dec.setNest(symbolTable.getCurrentScope());
+            boolean result = symbolTable.insert(String.valueOf(dec.ident.getText()), dec);
+            if (!result) {
+                throw new ScopeException();
+            }
+        }
+        for (ProcDec dec : block.procedureDecs) {
             dec.visit(this, arg);
         }
         Statement statement = block.statement;
         statement.visit(this, arg);
-        symbolTable.leaveScope();
         return null;
     }
 
@@ -38,6 +44,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitVarDec(VarDec varDec, Object arg) throws PLPException {
+        varDec.setNest(symbolTable.getCurrentScope());
         boolean result = symbolTable.insert(String.valueOf(varDec.ident.getText()), varDec);
         if (!result) {
             throw new ScopeException();
@@ -52,6 +59,7 @@ public class AstVisitorImpl implements ASTVisitor {
         if (declaration == null) {
             throw new ScopeException();
         }
+        statementCall.ident.setNest(symbolTable.getCurrentScope());
         return null;
     }
 
@@ -62,7 +70,7 @@ public class AstVisitorImpl implements ASTVisitor {
         if (declaration == null) {
             throw new ScopeException();
         }
-
+        statementInput.ident.setNest(symbolTable.getCurrentScope());
         return null;
     }
 
@@ -86,16 +94,23 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementIf(StatementIf statementIf, Object arg) throws PLPException {
+        statementIf.expression.visit(this, arg);
+        statementIf.statement.visit(this, arg);
         return null;
     }
 
     @Override
     public Object visitStatementWhile(StatementWhile statementWhile, Object arg) throws PLPException {
+        statementWhile.expression.visit(this, arg);
+        statementWhile.statement.visit(this, arg);
         return null;
     }
 
     @Override
     public Object visitExpressionBinary(ExpressionBinary expressionBinary, Object arg) throws PLPException {
+        expressionBinary.e0.visit(this, arg);
+        expressionBinary.e1.visit(this, arg);
+        IToken.Kind kind = expressionBinary.op.getKind();
         return null;
     }
 
@@ -105,7 +120,8 @@ public class AstVisitorImpl implements ASTVisitor {
        if (declaration == null) throw new ScopeException();
        expressionIdent.setDec(declaration);
        expressionIdent.setType(declaration.getType());
-       return expressionIdent.getType();
+       expressionIdent.setNest(symbolTable.getCurrentScope());
+       return expressionIdent.getDec();
     }
 
     @Override
@@ -128,10 +144,6 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitProcedure(ProcDec procDec, Object arg) throws PLPException {
-        boolean result = symbolTable.insert(String.valueOf(procDec.ident.getText()), procDec);
-        if (!result) {
-            throw new ScopeException();
-        }
         symbolTable.enterScope();
         procDec.block.visit(this, arg);
         symbolTable.leaveScope();
@@ -140,6 +152,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitConstDec(ConstDec constDec, Object arg) throws PLPException {
+        constDec.setNest(symbolTable.getCurrentScope());
         boolean result = symbolTable.insert(String.valueOf(constDec.ident.getText()), constDec);
         if (!result) {
             throw new ScopeException();
