@@ -38,6 +38,10 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
+        Declaration leftIdentDeclaration = symbolTable.lookup(String.valueOf(statementAssign.ident.getText()));
+        if (leftIdentDeclaration == null) {
+            throw new ScopeException();
+        }
         statementAssign.ident.visit(this, arg);
         statementAssign.expression.visit(this, arg);
         return null;
