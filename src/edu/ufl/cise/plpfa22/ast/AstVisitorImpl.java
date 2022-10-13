@@ -58,7 +58,8 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementOutput(StatementOutput statementOutput, Object arg) throws PLPException {
-        Declaration declaration = symbolTable.lookup(String.valueOf(statementOutput.firstToken));
+        statementOutput.expression.visit(this, arg);
+        Declaration declaration = symbolTable.lookup(String.valueOf(statementOutput.expression.firstToken.getText()));
         if (declaration == null) {
             throw new ScopeException();
         }
@@ -87,7 +88,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitExpressionIdent(ExpressionIdent expressionIdent, Object arg) throws PLPException {
-       Declaration declaration = symbolTable.lookup(expressionIdent.toString());
+       Declaration declaration = symbolTable.lookup(String.valueOf(expressionIdent.firstToken.getText()));
        expressionIdent.setDec(declaration);
        return declaration;
     }
@@ -114,6 +115,10 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitConstDec(ConstDec constDec, Object arg) throws PLPException {
+        boolean result = symbolTable.insert(String.valueOf(constDec.ident.getText()), constDec);
+        if (!result) {
+            throw new ScopeException();
+        }
         return null;
     }
 
