@@ -82,7 +82,6 @@ public class Parser implements IParser {
                 }
                 case KW_VAR -> {
                     while(token.getKind() == IToken.Kind.KW_VAR) {
-                        IToken temp = token;
                         consume();
                         if (token.getKind() != IToken.Kind.IDENT) {
                             throwSyntaxException("Expected IDENT after VAR", token);
@@ -91,7 +90,7 @@ public class Parser implements IParser {
                             IToken.Kind kind = token.getKind();
 
                             if (kind == IToken.Kind.IDENT) {
-                                varDecs.add(new VarDec(temp, token));
+                                varDecs.add(new VarDec(firstToken, token));
                                 consume();
                             }
 
