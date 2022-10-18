@@ -18,15 +18,14 @@ public class SymbolTable {
     public void enterScope() {
         currentScope++;
         stack.push(currentScope);
-        System.out.println("Enter scope currentscope:" + currentScope);
-        System.out.println("Map size:" + map.size());
+        LogHelper.printOutput("Enter scope currentscope:" + currentScope);
+        LogHelper.printOutput("Map size:" + map.size());
     }
-
 
     public void leaveScope() {
         stack.pop();
         currentScope = stack.peek();
-        System.out.println("Leave scope currentscope:" + currentScope);
+        LogHelper.printOutput("Leave scope currentscope:" + currentScope);
     }
 
 
@@ -43,7 +42,7 @@ public class SymbolTable {
             list = map.get(ident);
             for (IdentInfo identInfo : list) {
                 if (identInfo.getScope() == currentScope) {
-                    System.out.println("insert:identinfo:" + Arrays.toString(identInfo.getDeclaration().getFirstToken().getText()));
+                    LogHelper.printOutput("insert:identinfo:" + Arrays.toString(identInfo.getDeclaration().getFirstToken().getText()));
                     return false;
                 }
             }

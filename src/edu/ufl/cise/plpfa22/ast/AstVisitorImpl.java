@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 public class AstVisitorImpl implements ASTVisitor {
     private final SymbolTable symbolTable = new SymbolTable();
+    private static final boolean SHOW_OUTPUT = false;
 
     @Override
     public Object visitBlock(Block block, Object arg) throws PLPException {
@@ -18,7 +19,7 @@ public class AstVisitorImpl implements ASTVisitor {
             dec.visit(this, arg);
         }
         for (ProcDec dec : block.procedureDecs) {
-            System.out.println("Dec:"+dec + " scope:"+symbolTable.getCurrentScope());
+            showOutput("Dec:"+dec + " scope:"+symbolTable.getCurrentScope());
             dec.setNest(symbolTable.getCurrentScope());
             boolean result = symbolTable.insert(String.valueOf(dec.ident.getText()), dec);
             if (!result) {
@@ -33,6 +34,12 @@ public class AstVisitorImpl implements ASTVisitor {
         return null;
     }
 
+    private void showOutput(String text) {
+        if (SHOW_OUTPUT) {
+            System.out.println(text);
+        }
+    }
+
     @Override
     public Object visitProgram(Program program, Object arg) throws PLPException {
         program.block.visit(this, arg);
@@ -41,7 +48,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
-        System.out.println("statementAssign = " + Arrays.toString(statementAssign.ident.getText()));
+        showOutput("statementAssign = " + Arrays.toString(statementAssign.ident.getText()));
         Declaration leftIdentDeclaration = symbolTable.lookup(String.valueOf(statementAssign.ident.getText()));
         if (leftIdentDeclaration == null) {
             throw new ScopeException();
@@ -53,7 +60,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitVarDec(VarDec varDec, Object arg) throws PLPException {
-        System.out.println("visitVarDec varDEc:"+ Arrays.toString(varDec.ident.getText()));
+        showOutput("visitVarDec varDEc:"+ Arrays.toString(varDec.ident.getText()));
         varDec.setNest(symbolTable.getCurrentScope());
         boolean result = symbolTable.insert(String.valueOf(varDec.ident.getText()), varDec);
         if (!result) {
