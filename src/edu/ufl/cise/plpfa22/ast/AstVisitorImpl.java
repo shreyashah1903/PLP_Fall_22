@@ -4,6 +4,8 @@ import edu.ufl.cise.plpfa22.PLPException;
 import edu.ufl.cise.plpfa22.ScopeException;
 import edu.ufl.cise.plpfa22.SymbolTable;
 
+import java.util.Arrays;
+
 public class AstVisitorImpl implements ASTVisitor {
     private final SymbolTable symbolTable = new SymbolTable();
 
@@ -16,6 +18,7 @@ public class AstVisitorImpl implements ASTVisitor {
             dec.visit(this, arg);
         }
         for (ProcDec dec : block.procedureDecs) {
+            System.out.println("Dec:"+dec + " scope:"+symbolTable.getCurrentScope());
             dec.setNest(symbolTable.getCurrentScope());
             boolean result = symbolTable.insert(String.valueOf(dec.ident.getText()), dec);
             if (!result) {
@@ -38,6 +41,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
+        System.out.println("statementAssign = " + Arrays.toString(statementAssign.ident.getText()));
         Declaration leftIdentDeclaration = symbolTable.lookup(String.valueOf(statementAssign.ident.getText()));
         if (leftIdentDeclaration == null) {
             throw new ScopeException();
@@ -49,6 +53,7 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitVarDec(VarDec varDec, Object arg) throws PLPException {
+        System.out.println("visitVarDec varDEc:"+ Arrays.toString(varDec.ident.getText()));
         varDec.setNest(symbolTable.getCurrentScope());
         boolean result = symbolTable.insert(String.valueOf(varDec.ident.getText()), varDec);
         if (!result) {
@@ -69,7 +74,6 @@ public class AstVisitorImpl implements ASTVisitor {
         if (declaration == null) {
             throw new ScopeException();
         }
-        ident.setNest(symbolTable.getCurrentScope());
     }
 
     @Override
@@ -151,6 +155,7 @@ public class AstVisitorImpl implements ASTVisitor {
     public Object visitProcedure(ProcDec procDec, Object arg) throws PLPException {
         symbolTable.enterScope();
         procDec.block.visit(this, arg);
+        symbolTable.clearProcVariables();
         symbolTable.leaveScope();
         return null;
     }

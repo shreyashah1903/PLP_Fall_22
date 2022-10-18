@@ -2,28 +2,31 @@ package edu.ufl.cise.plpfa22;
 
 import edu.ufl.cise.plpfa22.ast.Declaration;
 
-import java.util.HashMap;
-import java.util.Stack;
-import java.util.TreeSet;
+import java.util.*;
 
 public class SymbolTable {
 
-    int currentScope = 0;
-    Stack<Integer> stack = new Stack<>();
-    HashMap<String, TreeSet<IdentInfo>> map = new HashMap<>();
+    private int currentScope = 0;
+    private Stack<Integer> stack = new Stack<>();
+    private HashMap<String, ArrayList<IdentInfo>> map = new HashMap<>();
+
     public SymbolTable() {
-        this.stack.push(currentScope);
+        stack.push(currentScope);
     }
 
 
     public void enterScope() {
-        stack.push(currentScope++);
+        currentScope++;
+        stack.push(currentScope);
+        System.out.println("Enter scope currentscope:" + currentScope);
+        System.out.println("Map size:" + map.size());
     }
 
 
     public void leaveScope() {
         stack.pop();
-        currentScope--;
+        currentScope = stack.peek();
+        System.out.println("Leave scope currentscope:" + currentScope);
     }
 
 
@@ -34,30 +37,48 @@ public class SymbolTable {
     public boolean insert(String ident, Declaration dec) {
 
         IdentInfo info = new IdentInfo(currentScope, dec);
-        TreeSet<IdentInfo> identSet = new TreeSet<>(new customComparator());
+        ArrayList<IdentInfo> list = new ArrayList<>();
+
         if (map.containsKey(ident)) {
-            identSet = map.get(ident);
-            if (identSet.contains(info)) {
-                return false;
+            list = map.get(ident);
+            for (IdentInfo identInfo : list) {
+                if (identInfo.getScope() == currentScope) {
+                    System.out.println("insert:identinfo:" + Arrays.toString(identInfo.getDeclaration().getFirstToken().getText()));
+                    return false;
+                }
             }
         }
-        identSet.add(info);
-        map.put(ident, identSet);
+        list.add(info);
+        map.put(ident, list);
         return true;
     }
 
 
     public Declaration lookup(String ident) {
 
-        if(!map.containsKey(ident)) return null;
-
-        for(IdentInfo info: map.get(ident)) {
-            if (info.getScope() <= currentScope) {
-                return info.getDeclaration();
+        if (!map.containsKey(ident)) {
+            return null;
+        }
+        ArrayList<IdentInfo> list = map.get(ident);
+        for (int i = list.size() - 1; i >= 0; i--) {
+            if (stack.contains(list.get(i).getScope())) {
+                return list.get(i).getDeclaration();
             }
         }
         return null;
     }
 
+    public void clearProcVariables() {
+        for (Map.Entry<String, ArrayList<IdentInfo>> entry : map.entrySet()) {
+            ArrayList<IdentInfo> list = entry.getValue();
 
+            Iterator<IdentInfo> iterator = list.iterator();
+            while (iterator.hasNext()) {
+                IdentInfo identInfo = iterator.next();
+                if (identInfo.getScope() == currentScope) {
+                    iterator.remove();
+                }
+            }
+        }
+    }
 }
