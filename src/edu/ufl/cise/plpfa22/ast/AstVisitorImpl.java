@@ -34,7 +34,7 @@ public class AstVisitorImpl implements ASTVisitor {
         return null;
     }
 
-    private void showOutput(String text) {
+    private void showOutput(Object text) {
         if (SHOW_OUTPUT) {
             System.out.println(text);
         }
@@ -92,9 +92,12 @@ public class AstVisitorImpl implements ASTVisitor {
     @Override
     public Object visitStatementOutput(StatementOutput statementOutput, Object arg) throws PLPException {
         statementOutput.expression.visit(this, arg);
-        Declaration declaration = symbolTable.lookup(String.valueOf(statementOutput.expression.firstToken.getText()));
-        if (declaration == null) {
-            throw new ScopeException();
+        showOutput(statementOutput.expression);
+        if (statementOutput.expression instanceof ExpressionIdent) {
+            Declaration declaration = symbolTable.lookup(String.valueOf(statementOutput.expression.firstToken.getText()));
+            if (declaration == null) {
+                throw new ScopeException();
+            }
         }
         return null;
     }

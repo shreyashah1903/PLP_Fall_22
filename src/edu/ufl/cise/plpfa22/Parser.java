@@ -149,12 +149,14 @@ public class Parser implements IParser {
                 statement = new StatementIf(startToken, expression, ifStatement);
             }
             case KW_WHILE -> {
+                IToken token1 = token;
                 consume();
-                Expression expression = handleExpression(startToken);
+                Expression expression = handleExpression(token1);
                 match(IToken.Kind.KW_DO);
+                token1 = token;
                 consume();
-                Statement whileStatement = handleStatement(startToken);
-                statement = new StatementWhile(startToken, expression, whileStatement);
+                Statement whileStatement = handleStatement(token1);
+                statement = new StatementWhile(token1, expression, whileStatement);
             }
             case KW_BEGIN -> {
                 List<Statement> statements = new ArrayList<>();
