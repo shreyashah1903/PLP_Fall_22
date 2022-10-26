@@ -1,8 +1,6 @@
 package edu.ufl.cise.plpfa22.ast;
 
-import edu.ufl.cise.plpfa22.PLPException;
-import edu.ufl.cise.plpfa22.ScopeException;
-import edu.ufl.cise.plpfa22.SymbolTable;
+import edu.ufl.cise.plpfa22.*;
 
 import java.util.Arrays;
 
@@ -19,7 +17,7 @@ public class AstVisitorImpl implements ASTVisitor {
             dec.visit(this, arg);
         }
         for (ProcDec dec : block.procedureDecs) {
-            showOutput("Dec:"+dec + " scope:"+symbolTable.getCurrentScope());
+            showOutput("Dec:" + dec + " scope:" + symbolTable.getCurrentScope());
             dec.setNest(symbolTable.getCurrentScope());
             boolean result = symbolTable.insert(String.valueOf(dec.ident.getText()), dec);
             if (!result) {
@@ -55,12 +53,15 @@ public class AstVisitorImpl implements ASTVisitor {
         }
         statementAssign.ident.visit(this, arg);
         statementAssign.expression.visit(this, arg);
+
+
+        showOutput("visitStatementAssign type:" + statementAssign.expression.type);
         return null;
     }
 
     @Override
     public Object visitVarDec(VarDec varDec, Object arg) throws PLPException {
-        showOutput("visitVarDec varDEc:"+ Arrays.toString(varDec.ident.getText()));
+        showOutput("visitVarDec varDEc:" + Arrays.toString(varDec.ident.getText()));
         varDec.setNest(symbolTable.getCurrentScope());
         boolean result = symbolTable.insert(String.valueOf(varDec.ident.getText()), varDec);
         if (!result) {
@@ -72,6 +73,10 @@ public class AstVisitorImpl implements ASTVisitor {
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
         setupIdent(arg, statementCall.ident);
+        Types.Type type = statementCall.ident.getDec().getType();
+        if (type != Types.Type.PROCEDURE) {
+            throw new TypeCheckException("Expected PROCEDURE type but found "+type);
+        }
         return null;
     }
 
@@ -97,6 +102,9 @@ public class AstVisitorImpl implements ASTVisitor {
             Declaration declaration = symbolTable.lookup(String.valueOf(statementOutput.expression.firstToken.getText()));
             if (declaration == null) {
                 throw new ScopeException();
+            }
+            if (declaration.getType() == Types.Type.PROCEDURE) {
+                throw new TypeCheckException("Cannot output a procedure");
             }
         }
         return null;
@@ -126,39 +134,56 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitExpressionBinary(ExpressionBinary expressionBinary, Object arg) throws PLPException {
-        expressionBinary.e0.visit(this, arg);
-        expressionBinary.e1.visit(this, arg);
+        Object result1 = expressionBinary.e0.visit(this, arg);
+        Object result2 = expressionBinary.e1.visit(this, arg);
+
+        if (isExpression(result1) && isExpression(result2)) {
+            Types.Type type1 = (Types.Type) result1;
+            Types.Type type2 = (Types.Type) result2;
+
+            IToken.Kind kind = expressionBinary.op.getKind();
+
+            if (type1.equals(Types.Type.NUMBER) && type2.equals(Types.Type.NUMBER) &&
+                    (kind.equals(IToken.Kind.MINUS) || kind.equals(IToken.Kind.DIV) || kind.equals(IToken.Kind.MOD))) {
+                expressionBinary.setType(Types.Type.NUMBER);
+            }
+        }
+
         return null;
+    }
+
+    private boolean isExpression(Object obj) {
+        return obj instanceof ExpressionIdent || obj instanceof ExpressionBooleanLit || obj instanceof ExpressionNumLit;
     }
 
     @Override
     public Object visitExpressionIdent(ExpressionIdent expressionIdent, Object arg) throws PLPException {
-       Declaration declaration = symbolTable.lookup(String.valueOf(expressionIdent.firstToken.getText()));
-       if (declaration == null) {
-           throw new ScopeException();
-       }
-       expressionIdent.setDec(declaration);
-       expressionIdent.setType(declaration.getType());
-       expressionIdent.setNest(symbolTable.getCurrentScope());
-       return expressionIdent.getDec();
+        Declaration declaration = symbolTable.lookup(String.valueOf(expressionIdent.firstToken.getText()));
+        if (declaration == null) {
+            throw new ScopeException();
+        }
+        expressionIdent.setDec(declaration);
+        expressionIdent.setType(declaration.getType());
+        expressionIdent.setNest(symbolTable.getCurrentScope());
+        return expressionIdent.getDec().getType();
     }
 
     @Override
     public Object visitExpressionNumLit(ExpressionNumLit expressionNumLit, Object arg) throws PLPException {
         expressionNumLit.setType(Types.Type.NUMBER);
-        return expressionNumLit.getFirstToken().getIntValue();
+        return expressionNumLit.getType();
     }
 
     @Override
     public Object visitExpressionStringLit(ExpressionStringLit expressionStringLit, Object arg) throws PLPException {
         expressionStringLit.setType(Types.Type.STRING);
-        return expressionStringLit.getFirstToken().getStringValue();
+        return expressionStringLit.getType();
     }
 
     @Override
     public Object visitExpressionBooleanLit(ExpressionBooleanLit expressionBooleanLit, Object arg) throws PLPException {
         expressionBooleanLit.setType(Types.Type.BOOLEAN);
-        return expressionBooleanLit.getFirstToken().getBooleanValue();
+        return expressionBooleanLit.getType();
     }
 
     @Override
@@ -167,6 +192,7 @@ public class AstVisitorImpl implements ASTVisitor {
         procDec.block.visit(this, arg);
         symbolTable.clearProcVariables();
         symbolTable.leaveScope();
+        procDec.setType(Types.Type.PROCEDURE);
         return null;
     }
 
@@ -176,6 +202,13 @@ public class AstVisitorImpl implements ASTVisitor {
         boolean result = symbolTable.insert(String.valueOf(constDec.ident.getText()), constDec);
         if (!result) {
             throw new ScopeException();
+        }
+        if (constDec.val instanceof Integer) {
+            constDec.setType(Types.Type.NUMBER);
+        } else if (constDec.val instanceof String) {
+            constDec.setType(Types.Type.STRING);
+        } else if (constDec.val instanceof Boolean) {
+            constDec.setType(Types.Type.BOOLEAN);
         }
         return null;
     }
