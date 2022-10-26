@@ -7,6 +7,9 @@ import static edu.ufl.cise.plpfa22.IToken.Kind;
 import static edu.ufl.cise.plpfa22.LogHelper.printOutput;
 import static edu.ufl.cise.plpfa22.ast.Types.Type;
 
+//TODO 1. Check if/while guard cases
+//     2. Check BinaryExpression and handle all operators
+
 public class TypeChecker implements ASTVisitor {
     private boolean isTreeTraversedOnce = false;
 
@@ -37,7 +40,7 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
         //TODO Check if assignment is correctly typed
-
+        statementAssign.expression.visit(this, arg);
         Types.Type expressionType;
         if (statementAssign.expression instanceof ExpressionIdent) {
             expressionType = ((ExpressionIdent) statementAssign.expression).getDec().getType();
@@ -64,7 +67,6 @@ public class TypeChecker implements ASTVisitor {
                 ((ExpressionIdent) statementAssign.expression).getDec().getType() == null) {
             ((ExpressionIdent) statementAssign.expression).getDec().setType(identDecType);
         }
-        statementAssign.expression.visit(this, arg);
         printOutput("Typechecker visitStatementAssign identType:" + statementAssign.ident.getDec().getType() + " expression type:" + statementAssign.expression.getType());
         return null;
     }
@@ -157,13 +159,11 @@ public class TypeChecker implements ASTVisitor {
         }
 
         if (type1 == null && type2 != null) {
-            if (expressionBinary.e0 instanceof ExpressionIdent) {
-                ((ExpressionIdent) expressionBinary.e0).getDec().setType(type2);
-            }
+            Expression expression = expressionBinary.e0;
+            setExpressionType(type2, expression, expressionBinary);
         } else if (type1 != null && type2 == null) {
-            if (expressionBinary.e1 instanceof ExpressionIdent) {
-                ((ExpressionIdent) expressionBinary.e1).getDec().setType(type1);
-            }
+            Expression expression = expressionBinary.e1;
+            setExpressionType(type1, expression, expressionBinary);
         }
 
         // TODO Handle more cases
@@ -184,9 +184,24 @@ public class TypeChecker implements ASTVisitor {
             if (expressionBinary.e1 instanceof ExpressionIdent) {
                 ((ExpressionIdent) expressionBinary.e1).getDec().setType(Type.NUMBER);
             }
+            expressionBinary.setType(Type.NUMBER);
         }
         printOutput("TypeChecker- visitExpressionBinary type1:" + type1 + " Type2:" + type2);
         return expressionBinary.getType();
+    }
+
+    private void setExpressionType(Type type, Expression expression, ExpressionBinary expressionBinary) {
+        if (expression instanceof ExpressionIdent) {
+            ((ExpressionIdent) expression).getDec().setType(type);
+        }
+        else if (expression instanceof ExpressionBinary) {
+            Expression e0 = ((ExpressionBinary) expression).e0;
+            Expression e1 = ((ExpressionBinary) expression).e1;
+
+            ((ExpressionIdent)e0).getDec().setType(type);
+            ((ExpressionIdent)e1).getDec().setType(type);
+        }
+        expressionBinary.setType(type);
     }
 
     private boolean isOnlyNumberOperator(Kind kind) {
