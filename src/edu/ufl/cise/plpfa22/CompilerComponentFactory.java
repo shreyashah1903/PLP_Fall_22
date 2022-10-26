@@ -20,4 +20,8 @@ public class CompilerComponentFactory {
 	public static ASTVisitor getScopeVisitor() {
 		return new AstVisitorImpl();
 	}
+
+    public static ASTVisitor getTypeInferenceVisitor() {
+		return new AstVisitorImpl();
+	}
 }
