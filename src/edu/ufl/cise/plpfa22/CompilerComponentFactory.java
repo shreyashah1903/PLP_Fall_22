@@ -6,6 +6,7 @@ package edu.ufl.cise.plpfa22;
 
 import edu.ufl.cise.plpfa22.ast.ASTVisitor;
 import edu.ufl.cise.plpfa22.ast.AstVisitorImpl;
+import edu.ufl.cise.plpfa22.ast.TypeChecker;
 
 public class CompilerComponentFactory {
 
@@ -22,6 +23,6 @@ public class CompilerComponentFactory {
 	}
 
     public static ASTVisitor getTypeInferenceVisitor() {
-		return new AstVisitorImpl();
+		return new TypeChecker();
 	}
 }

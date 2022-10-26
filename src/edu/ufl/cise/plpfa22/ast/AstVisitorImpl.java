@@ -73,10 +73,6 @@ public class AstVisitorImpl implements ASTVisitor {
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
         setupIdent(arg, statementCall.ident);
-        Types.Type type = statementCall.ident.getDec().getType();
-        if (type != Types.Type.PROCEDURE) {
-            throw new TypeCheckException("Expected PROCEDURE type but found "+type);
-        }
         return null;
     }
 
@@ -102,9 +98,6 @@ public class AstVisitorImpl implements ASTVisitor {
             Declaration declaration = symbolTable.lookup(String.valueOf(statementOutput.expression.firstToken.getText()));
             if (declaration == null) {
                 throw new ScopeException();
-            }
-            if (declaration.getType() == Types.Type.PROCEDURE) {
-                throw new TypeCheckException("Cannot output a procedure");
             }
         }
         return null;
@@ -134,26 +127,9 @@ public class AstVisitorImpl implements ASTVisitor {
 
     @Override
     public Object visitExpressionBinary(ExpressionBinary expressionBinary, Object arg) throws PLPException {
-        Object result1 = expressionBinary.e0.visit(this, arg);
-        Object result2 = expressionBinary.e1.visit(this, arg);
-
-        if (isExpression(result1) && isExpression(result2)) {
-            Types.Type type1 = (Types.Type) result1;
-            Types.Type type2 = (Types.Type) result2;
-
-            IToken.Kind kind = expressionBinary.op.getKind();
-
-            if (type1.equals(Types.Type.NUMBER) && type2.equals(Types.Type.NUMBER) &&
-                    (kind.equals(IToken.Kind.MINUS) || kind.equals(IToken.Kind.DIV) || kind.equals(IToken.Kind.MOD))) {
-                expressionBinary.setType(Types.Type.NUMBER);
-            }
-        }
-
+        expressionBinary.e0.visit(this, arg);
+        expressionBinary.e1.visit(this, arg);
         return null;
-    }
-
-    private boolean isExpression(Object obj) {
-        return obj instanceof ExpressionIdent || obj instanceof ExpressionBooleanLit || obj instanceof ExpressionNumLit;
     }
 
     @Override
@@ -192,7 +168,6 @@ public class AstVisitorImpl implements ASTVisitor {
         procDec.block.visit(this, arg);
         symbolTable.clearProcVariables();
         symbolTable.leaveScope();
-        procDec.setType(Types.Type.PROCEDURE);
         return null;
     }
 
@@ -202,13 +177,6 @@ public class AstVisitorImpl implements ASTVisitor {
         boolean result = symbolTable.insert(String.valueOf(constDec.ident.getText()), constDec);
         if (!result) {
             throw new ScopeException();
-        }
-        if (constDec.val instanceof Integer) {
-            constDec.setType(Types.Type.NUMBER);
-        } else if (constDec.val instanceof String) {
-            constDec.setType(Types.Type.STRING);
-        } else if (constDec.val instanceof Boolean) {
-            constDec.setType(Types.Type.BOOLEAN);
         }
         return null;
     }
