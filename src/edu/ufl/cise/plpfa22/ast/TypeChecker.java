@@ -7,6 +7,7 @@ import edu.ufl.cise.plpfa22.TypeCheckException;
 import static edu.ufl.cise.plpfa22.LogHelper.printOutput;
 
 public class TypeChecker implements ASTVisitor {
+    private boolean isTreeTraversedOnce = false;
     @Override
     public Object visitBlock(Block block, Object arg) throws PLPException {
         for (ConstDec dec : block.constDecs) {
@@ -26,11 +27,39 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public Object visitProgram(Program program, Object arg) throws PLPException {
         program.block.visit(this, arg);
+        isTreeTraversedOnce = true;
+        program.block.visit(this, arg);
         return null;
     }
 
     @Override
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
+        //TODO Check if assignment is correctly typed
+        Types.Type expressionType;
+        if (statementAssign.expression instanceof ExpressionIdent) {
+            expressionType = ((ExpressionIdent) statementAssign.expression).getDec().getType();
+        }
+        else {
+            expressionType = statementAssign.expression.getType();
+        }
+
+        Types.Type identDecType = statementAssign.ident.getDec().getType();
+        if (isTreeTraversedOnce && identDecType != null && identDecType != expressionType) {
+            throw new TypeCheckException("Type mismatch: Expected:"+identDecType + " but found "+expressionType);
+        }
+
+        if (isTreeTraversedOnce && statementAssign.ident.getDec() instanceof ConstDec) {
+            throw new TypeCheckException("Cannot assign again to CONST");
+        }
+
+        // Type can be inferred from the RHS or LHS. If RHS type unknown, infer from LHS (if known). If LHS type unknown, infer from RHS (if known).
+        if (expressionType != null && identDecType == null) {
+            statementAssign.ident.dec.setType(expressionType);
+        }
+        if (identDecType != null && statementAssign.expression instanceof ExpressionIdent && ((ExpressionIdent) statementAssign.expression).getDec().getType() == null) {
+            ((ExpressionIdent) statementAssign.expression).getDec().setType(identDecType);
+        }
+        printOutput("Typechecker visitStatementAssign identType:" + statementAssign.ident.getDec().getType() + " expression type:"+statementAssign.expression.getType());
         return null;
     }
 
@@ -42,19 +71,28 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
         Types.Type type = statementCall.ident.getDec().getType();
-        if (type != null && type != Types.Type.PROCEDURE) {
+        if (isTreeTraversedOnce && type != Types.Type.PROCEDURE) {
             throw new TypeCheckException("Expected PROCEDURE type but found "+type);
         }
+        checkNullType(type);
         return null;
     }
+
+    private void checkNullType(Types.Type type) throws TypeCheckException {
+        if (isTreeTraversedOnce && type == null) {
+            throw new TypeCheckException("Type is null");
+        }
+    }
+
 
     @Override
     public Object visitStatementInput(StatementInput statementInput, Object arg) throws PLPException {
         Types.Type type = statementInput.ident.dec.getType();
-        printOutput("visitStatementInput: Type"+type);
-        if (type != null && !isStatementInputType(type)) {
+        printOutput("TypeChecker - visitStatementInput: Type:"+type);
+        if (isTreeTraversedOnce && !isStatementInputType(type)) {
             throw new TypeCheckException("StatementInput type should be either Number, Boolean or String");
         }
+        checkNullType(type);
         return null;
     }
 
@@ -72,9 +110,11 @@ public class TypeChecker implements ASTVisitor {
             Declaration declaration = ((ExpressionIdent) statementOutput.expression).getDec();
 
             Types.Type type = declaration.getType();
-            if (type != null && !isStatementOutputType(type)) {
+            printOutput("Typechecker - visitStatementOutput type:"+type);
+            if (isTreeTraversedOnce && !isStatementOutputType(type)) {
                 throw new TypeCheckException("StatementOutput type should be Number, String or Boolean");
             }
+            checkNullType(type);
         }
         return statementOutput.expression.getType();
     }
@@ -89,6 +129,8 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public Object visitStatementIf(StatementIf statementIf, Object arg) throws PLPException {
+        statementIf.expression.visit(this, arg);
+        statementIf.statement.visit(this, arg);
         return null;
     }
 
@@ -101,7 +143,7 @@ public class TypeChecker implements ASTVisitor {
     public Object visitExpressionBinary(ExpressionBinary expressionBinary, Object arg) throws PLPException {
         Object result1 = expressionBinary.e0.visit(this, arg);
         Object result2 = expressionBinary.e1.visit(this, arg);
-
+        // TODO Handle more cases
         if (isExpression(result1) && isExpression(result2)) {
             Types.Type type1 = (Types.Type) result1;
             Types.Type type2 = (Types.Type) result2;

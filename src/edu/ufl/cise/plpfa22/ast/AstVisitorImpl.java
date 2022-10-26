@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 public class AstVisitorImpl implements ASTVisitor {
     private final SymbolTable symbolTable = new SymbolTable();
-    private static final boolean SHOW_OUTPUT = false;
 
     @Override
     public Object visitBlock(Block block, Object arg) throws PLPException {
@@ -33,9 +32,7 @@ public class AstVisitorImpl implements ASTVisitor {
     }
 
     private void showOutput(Object text) {
-        if (SHOW_OUTPUT) {
-            System.out.println(text);
-        }
+        LogHelper.printOutput(text);
     }
 
     @Override
