@@ -128,16 +128,27 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public Object visitStatementIf(StatementIf statementIf, Object arg) throws PLPException {
-        statementIf.expression.visit(this, arg);
+        Type type = (Type) statementIf.expression.visit(this, arg);
+        printOutput("visitStatementIf -- type:"+type);
+        checkGuardCondition(type);
         statementIf.statement.visit(this, arg);
         return null;
     }
 
     @Override
     public Object visitStatementWhile(StatementWhile statementWhile, Object arg) throws PLPException {
-        statementWhile.expression.visit(this, arg);
+        Type type = (Type) statementWhile.expression.visit(this, arg);
+        printOutput("visitStatementWhile -- type:"+type);
+        //FIXME Shrey Fix this :D
+        checkGuardCondition(type);
         statementWhile.statement.visit(this, arg);
         return null;
+    }
+
+    private void checkGuardCondition(Type type) throws TypeCheckException {
+        if (isTreeTraversedOnce && !type.equals(Type.BOOLEAN)) {
+            throw new TypeCheckException("Guard condition should be BOOLEAN but found "+type);
+        }
     }
 
     @Override
@@ -160,10 +171,11 @@ public class TypeChecker implements ASTVisitor {
 
         // TODO Handle more cases
         if (type1 != null && type2 != null) {
-            if (type1.equals(Types.Type.NUMBER)) {
-                expressionBinary.setType(Types.Type.NUMBER);
-            } else if (isAnyEqualOperator(kind)) {
+            if (isAnyEqualOperator(kind)) {
                 expressionBinary.setType(Type.BOOLEAN);
+            }
+            else if (type1.equals(Types.Type.NUMBER)) {
+                expressionBinary.setType(Types.Type.NUMBER);
             }
         }
         printOutput("TypeChecker- visitExpressionBinary type1:" + type1 + " Type2:" + type2);
