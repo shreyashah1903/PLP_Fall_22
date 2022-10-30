@@ -39,23 +39,12 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
-        //TODO Check if assignment is correctly typed
-        statementAssign.expression.visit(this, arg);
+        Types.Type expressionType = (Type) statementAssign.expression.visit(this, arg);
         Declaration identDec = statementAssign.ident.getDec();
-        Types.Type identDecType = identDec.getType();
+        Types.Type identType = identDec.getType();
 
-        Types.Type expressionType;
-        Declaration declaration = null;
-        if (statementAssign.expression instanceof ExpressionIdent) {
-            declaration = ((ExpressionIdent) statementAssign.expression).getDec();
-            expressionType = declaration.getType();
-        }
-        else {
-            expressionType = statementAssign.expression.getType();
-        }
-
-        if (identDecType != null && expressionType != null && identDecType != expressionType) {
-            throw new TypeCheckException("Type mismatch: Expected:" + identDecType + " but found " + expressionType);
+        if (identType != null && expressionType != null && identType != expressionType) {
+            throw new TypeCheckException("Type mismatch: Expected:" + identType + " but found " + expressionType);
         }
 
         if (identDec instanceof ConstDec) {
@@ -64,16 +53,14 @@ public class TypeChecker implements ASTVisitor {
 
         // Type can be inferred from the RHS or LHS. If RHS type unknown, infer from LHS (if known).
         // If LHS type unknown, infer from RHS (if known).
-        if (expressionType != null && identDecType == null) {
-            statementAssign.ident.dec.setType(expressionType);
-        }
-        if (identDecType != null && statementAssign.expression instanceof ExpressionIdent &&
-                ((ExpressionIdent) statementAssign.expression).getDec().getType() == null) {
-            ((ExpressionIdent) statementAssign.expression).getDec().setType(identDecType);
+        if (expressionType != null && identType == null) {
+            identDec.setType(expressionType);
+        } else if (identType != null && expressionType == null) {
+            statementAssign.expression.setType(identType);
         }
 
         printOutput("Typechecker visitStatementAssign identType:" + identDec.getType() + " expression type:" + statementAssign.expression.getType());
-        return null;
+        return statementAssign.expression.getType();
     }
 
     @Override
@@ -159,7 +146,7 @@ public class TypeChecker implements ASTVisitor {
         Types.Type type2 = (Types.Type) expressionBinary.e1.visit(this, arg);
         Kind kind = expressionBinary.op.getKind();
 
-        if (isTreeTraversedOnce && type1 != null && type2 != null && !type1.equals(type2)) {
+        if (type1 != null && type2 != null && !type1.equals(type2)) {
             throw new TypeCheckException("Types should be same");
         }
 
@@ -173,9 +160,9 @@ public class TypeChecker implements ASTVisitor {
 
         // TODO Handle more cases
         if (type1 != null && type2 != null) {
-            if (type1.equals(Types.Type.NUMBER) && type2.equals(Types.Type.NUMBER)) {
+            if (type1.equals(Types.Type.NUMBER)) {
                 expressionBinary.setType(Types.Type.NUMBER);
-            } else if (type1.equals(type2) && (isAnyEqualOperator(kind))) {
+            } else if (isAnyEqualOperator(kind)) {
                 expressionBinary.setType(Type.BOOLEAN);
             }
         }
@@ -186,8 +173,7 @@ public class TypeChecker implements ASTVisitor {
     private void setExpressionType(Type type, Expression expression, ExpressionBinary expressionBinary) {
         if (expression instanceof ExpressionIdent) {
             ((ExpressionIdent) expression).getDec().setType(type);
-        }
-        else if (expression instanceof ExpressionBinary) {
+        } else if (expression instanceof ExpressionBinary) {
             Expression e0 = ((ExpressionBinary) expression).e0;
             Expression e1 = ((ExpressionBinary) expression).e1;
 
@@ -196,10 +182,6 @@ public class TypeChecker implements ASTVisitor {
             setExpressionType(type, e1, expressionBinary);
         }
         expressionBinary.setType(type);
-    }
-
-    private boolean isOnlyNumberOperator(Kind kind) {
-        return kind == Kind.MINUS || kind == Kind.DIV || kind == Kind.MOD;
     }
 
     private boolean isAnyEqualOperator(Kind kind) {
