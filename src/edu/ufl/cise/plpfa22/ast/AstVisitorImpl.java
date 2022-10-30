@@ -162,10 +162,11 @@ public class AstVisitorImpl implements ASTVisitor {
     @Override
     public Object visitProcedure(ProcDec procDec, Object arg) throws PLPException {
         symbolTable.enterScope();
+        procDec.setType(Types.Type.PROCEDURE);
         procDec.block.visit(this, arg);
         symbolTable.clearProcVariables();
         symbolTable.leaveScope();
-        return null;
+        return procDec.getType();
     }
 
     @Override
@@ -175,7 +176,14 @@ public class AstVisitorImpl implements ASTVisitor {
         if (!result) {
             throw new ScopeException();
         }
-        return null;
+        if (constDec.val instanceof Integer) {
+            constDec.setType(Types.Type.NUMBER);
+        } else if (constDec.val instanceof String) {
+            constDec.setType(Types.Type.STRING);
+        } else if (constDec.val instanceof Boolean) {
+            constDec.setType(Types.Type.BOOLEAN);
+        }
+        return constDec.getType();
     }
 
     @Override

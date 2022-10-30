@@ -41,20 +41,24 @@ public class TypeChecker implements ASTVisitor {
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
         //TODO Check if assignment is correctly typed
         statementAssign.expression.visit(this, arg);
+        Declaration identDec = statementAssign.ident.getDec();
+        Types.Type identDecType = identDec.getType();
+
         Types.Type expressionType;
+        Declaration declaration = null;
         if (statementAssign.expression instanceof ExpressionIdent) {
-            expressionType = ((ExpressionIdent) statementAssign.expression).getDec().getType();
+            declaration = ((ExpressionIdent) statementAssign.expression).getDec();
+            expressionType = declaration.getType();
         }
         else {
             expressionType = statementAssign.expression.getType();
         }
 
-        Types.Type identDecType = statementAssign.ident.getDec().getType();
-        if (isTreeTraversedOnce && identDecType != null && identDecType != expressionType) {
+        if (identDecType != null && expressionType != null && identDecType != expressionType) {
             throw new TypeCheckException("Type mismatch: Expected:" + identDecType + " but found " + expressionType);
         }
 
-        if (isTreeTraversedOnce && statementAssign.ident.getDec() instanceof ConstDec) {
+        if (identDec instanceof ConstDec) {
             throw new TypeCheckException("Cannot assign again to CONST");
         }
 
@@ -67,7 +71,8 @@ public class TypeChecker implements ASTVisitor {
                 ((ExpressionIdent) statementAssign.expression).getDec().getType() == null) {
             ((ExpressionIdent) statementAssign.expression).getDec().setType(identDecType);
         }
-        printOutput("Typechecker visitStatementAssign identType:" + statementAssign.ident.getDec().getType() + " expression type:" + statementAssign.expression.getType());
+
+        printOutput("Typechecker visitStatementAssign identType:" + identDec.getType() + " expression type:" + statementAssign.expression.getType());
         return null;
     }
 
@@ -79,7 +84,7 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
         Types.Type type = statementCall.ident.getDec().getType();
-        if (isTreeTraversedOnce && type != Types.Type.PROCEDURE) {
+        if (type != Types.Type.PROCEDURE) {
             throw new TypeCheckException("Expected PROCEDURE type but found " + type);
         }
         checkNullType(type);
@@ -174,18 +179,6 @@ public class TypeChecker implements ASTVisitor {
                 expressionBinary.setType(Type.BOOLEAN);
             }
         }
-        if (isOnlyNumberOperator(kind) && (type1 == null || type2 == null)) {
-            expressionBinary.e0.setType(Type.NUMBER);
-            expressionBinary.e1.setType(Type.NUMBER);
-
-            if (expressionBinary.e0 instanceof ExpressionIdent) {
-                ((ExpressionIdent) expressionBinary.e0).getDec().setType(Type.NUMBER);
-            }
-            if (expressionBinary.e1 instanceof ExpressionIdent) {
-                ((ExpressionIdent) expressionBinary.e1).getDec().setType(Type.NUMBER);
-            }
-            expressionBinary.setType(Type.NUMBER);
-        }
         printOutput("TypeChecker- visitExpressionBinary type1:" + type1 + " Type2:" + type2);
         return expressionBinary.getType();
     }
@@ -198,8 +191,9 @@ public class TypeChecker implements ASTVisitor {
             Expression e0 = ((ExpressionBinary) expression).e0;
             Expression e1 = ((ExpressionBinary) expression).e1;
 
-            ((ExpressionIdent)e0).getDec().setType(type);
-            ((ExpressionIdent)e1).getDec().setType(type);
+            // Set expression type for child expressions
+            setExpressionType(type, e0, expressionBinary);
+            setExpressionType(type, e1, expressionBinary);
         }
         expressionBinary.setType(type);
     }
@@ -235,20 +229,12 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public Object visitProcedure(ProcDec procDec, Object arg) throws PLPException {
-        procDec.setType(Types.Type.PROCEDURE);
         procDec.block.visit(this, arg);
         return procDec.getType();
     }
 
     @Override
     public Object visitConstDec(ConstDec constDec, Object arg) throws PLPException {
-        if (constDec.val instanceof Integer) {
-            constDec.setType(Types.Type.NUMBER);
-        } else if (constDec.val instanceof String) {
-            constDec.setType(Types.Type.STRING);
-        } else if (constDec.val instanceof Boolean) {
-            constDec.setType(Types.Type.BOOLEAN);
-        }
         return constDec.getType();
     }
 
