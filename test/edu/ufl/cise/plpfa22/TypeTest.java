@@ -578,13 +578,15 @@ void testProcedureAssignment(TestInfo testInfo) {
 }
 
 
-//FIXME @Shrey Why this fails with SyntaxException?
 @Test
 void testAssignIntToString(TestInfo testInfo) {
 	String input = """
 			VAR x;
-			x:= 5
+			BEGIN
+			x:= 5;
 			x:= "test"
+			END
+			.
 			""";
 	runTest(input,testInfo, TypeCheckException.class);
 }
