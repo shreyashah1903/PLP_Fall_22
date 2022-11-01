@@ -561,6 +561,35 @@ void expressionsOnStrings1(TestInfo testInfo) throws PLPException{
 			""";
 	runTest(input,testInfo);
 }
+
+// Newly added tests
+@Test
+void testProcedureAssignment(TestInfo testInfo) {
+	String input = """
+		PROCEDURE A;
+		;
+        PROCEDURE B;
+        ;
+        A := B  //Cannot assign procedure to another
+        .
+        """;
+	runTest(input,testInfo, TypeCheckException.class);
+
+}
+
+
+//FIXME @Shrey Why this fails with SyntaxException?
+@Test
+void testAssignIntToString(TestInfo testInfo) {
+	String input = """
+			VAR x;
+			x:= 5
+			x:= "test"
+			""";
+	runTest(input,testInfo, TypeCheckException.class);
+}
+
+
 }
 
 

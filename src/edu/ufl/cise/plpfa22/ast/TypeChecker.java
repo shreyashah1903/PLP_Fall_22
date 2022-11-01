@@ -51,6 +51,10 @@ public class TypeChecker implements ASTVisitor {
             throw new TypeCheckException("Cannot assign again to CONST");
         }
 
+        if (identType == Type.PROCEDURE || expressionType == Type.PROCEDURE) {
+            throw new TypeCheckException("Cannot assign to a procedure");
+        }
+
         // Type can be inferred from the RHS or LHS. If RHS type unknown, infer from LHS (if known).
         // If LHS type unknown, infer from RHS (if known).
         if (expressionType != null && identType == null) {
