@@ -581,8 +581,8 @@ void testProcedureAssignment(TestInfo testInfo) {
 @Test
 void testAssignIntToString(TestInfo testInfo) {
 	String input = """
-			VAR x;
-			BEGIN
+      		VAR x;
+   			BEGIN
 			x:= 5;
 			x:= "test"
 			END

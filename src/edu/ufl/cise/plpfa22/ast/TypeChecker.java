@@ -119,6 +119,7 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public Object visitStatementOutput(StatementOutput statementOutput, Object arg) throws PLPException {
+        statementOutput.expression.visit(this, arg);
         if (statementOutput.expression instanceof ExpressionIdent) {
             Declaration declaration = ((ExpressionIdent) statementOutput.expression).getDec();
 
@@ -179,12 +180,16 @@ public class TypeChecker implements ASTVisitor {
 
         if (type1 == null && type2 != null) {
             Expression expression = expressionBinary.e0;
-            setExpressionType(type2, expression, expressionBinary);
+            expression.setType(type2);
         } else if (type1 != null && type2 == null) {
             Expression expression = expressionBinary.e1;
-            setExpressionType(type1, expression, expressionBinary);
+            expression.setType(type1);
+        } else if (isTreeTraversedOnce && type1 == null && type2 == null) {
+            throw new TypeCheckException("Types are not known for LHS and RHS.");
         }
 
+        type1 = expressionBinary.e0.getType();
+        type2 = expressionBinary.e1.getType();
         // TODO Handle more cases
         if (type1 != null && type2 != null) {
             if (isAnyEqualOperator(kind)) {
@@ -192,6 +197,9 @@ public class TypeChecker implements ASTVisitor {
             }
             else if (type1.equals(Types.Type.NUMBER)) {
                 expressionBinary.setType(Types.Type.NUMBER);
+            }
+            else if (type1.equals(Type.STRING)) {
+                expressionBinary.setType(Types.Type.STRING);
             }
         }
         printOutput("TypeChecker- visitExpressionBinary type1:" + type1 + " Type2:" + type2);
