@@ -591,6 +591,96 @@ void testAssignIntToString(TestInfo testInfo) {
 	runTest(input,testInfo, TypeCheckException.class);
 }
 
+    @Test
+    void testInferType(TestInfo testInfo) throws PLPException {
+        String input = """
+                VAR x, y, z;
+                BEGIN
+                y := 1;
+                z := FALSE;
+                ! (x = y) * z // Inferred type of x
+                END
+                .
+                """;
+        runTest(input, testInfo);
+
+    }
+
+    @Test
+    void testCannotInferType(TestInfo testInfo) throws PLPException {
+        String input = """
+                VAR x, y, z;
+                BEGIN
+                z := FALSE;
+                ! (x = y) * z
+                END
+                .
+                """;
+        runTest(input, testInfo, TypeCheckException.class);
+
+    }
+
+    @Test
+    void ss_testIncorrectAssignmentComparison(TestInfo testInfo) throws PLPException {
+        String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                y := "hello";
+                z := FALSE;
+                ! (x = y) * z
+                END
+                .
+                """;
+        runTest(input, testInfo, TypeCheckException.class);
+    }
+
+    @Test
+    void ss_testIncorrectGuardCondition(TestInfo testInfo) throws PLPException {
+        String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                y := "hello";
+                z := FALSE;
+                IF y THEN ! y ;
+                END
+                .
+                """;
+        runTest(input, testInfo, TypeCheckException.class);
+    }
+
+    @Test
+    void ss_testIncorrectWhileGuardCondition(TestInfo testInfo) throws PLPException {
+        String input = """
+                CONST x = 5;
+                BEGIN
+                    WHILE x
+                    DO
+                    !x;
+                END
+                .
+                """;
+        runTest(input, testInfo, TypeCheckException.class);
+    }
+
+
+
+    @Test
+    void ss_testIncorrectTypeAfterAssign(TestInfo testInfo) throws PLPException {
+        String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                z := FALSE;
+                ! (x = y) * z; //Type error
+                y := "hello"
+                END
+                .
+                """;
+        runTest(input, testInfo, TypeCheckException.class);
+    }
+
 
 }
 
