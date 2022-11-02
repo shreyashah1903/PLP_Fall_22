@@ -102,6 +102,9 @@ public class TypeChecker implements ASTVisitor {
     public Object visitStatementInput(StatementInput statementInput, Object arg) throws PLPException {
         Types.Type type = statementInput.ident.dec.getType();
         printOutput("TypeChecker - visitStatementInput: Type:" + type);
+        if (statementInput.ident.getDec() instanceof ConstDec) {
+            throw new TypeCheckException("StatementInput type cannot contain CONST");
+        }
         if (isTreeTraversedOnce && !isStatementInputType(type)) {
             throw new TypeCheckException("StatementInput type should be either Number, Boolean or String");
         }
@@ -184,12 +187,16 @@ public class TypeChecker implements ASTVisitor {
         } else if (type1 != null && type2 == null) {
             Expression expression = expressionBinary.e1;
             expression.setType(type1);
-        } else if (isTreeTraversedOnce && type1 == null && type2 == null) {
-            throw new TypeCheckException("Types are not known for LHS and RHS.");
         }
 
         type1 = expressionBinary.e0.getType();
         type2 = expressionBinary.e1.getType();
+
+        printOutput("visitExpressionBinary type1:"+type1 + " type2:"+type2);
+
+        if (isTreeTraversedOnce && type1 == null && type2 == null) {
+            throw new TypeCheckException("Types are not known for LHS and RHS.");
+        }
         // TODO Handle more cases
         if (type1 != null && type2 != null) {
             if (isAnyEqualOperator(kind)) {
