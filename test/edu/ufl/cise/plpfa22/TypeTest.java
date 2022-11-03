@@ -927,8 +927,26 @@ void testAssignIntToString(TestInfo testInfo) {
 		String input = """
                 VAR x, y, z;
                 BEGIN
-                	x := 10;
-                	! x
+                	x := TRUE;
+                	! x;
+                	! (x=z);
+                	z := "TRUE"
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+
+	@Test
+	void ss_Test11(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                	x := TRUE;
+                	! x;
+                	! (x=z);
+                	z := TRUE
                 END
                 .
                 """;
