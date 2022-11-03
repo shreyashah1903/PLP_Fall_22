@@ -681,6 +681,96 @@ void testAssignIntToString(TestInfo testInfo) {
         runTest(input, testInfo, TypeCheckException.class);
     }
 
+	@Test
+	void ss_multiply(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                z := "ABC";
+                ! (y*z);
+                y := "hello"
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+	@Test
+	void ss_minus(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                z := "ABC";
+                ! (y-z);
+                y := "hello"
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+	@Test
+	void ss_plus(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                z := "ABC";
+                ! (y+z);
+                y := "hello"
+                END
+                .
+                """;
+		runTest(input, testInfo);
+	}
+
+	@Test
+	void ss_div(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                z := "ABC";
+                ! (y/z);
+                y := "hello"
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+	@Test
+	void ss_mod_incorrect(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                z := "ABC";
+                ! (y%z);
+                y := "hello"
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+	@Test
+	void ss_modIncorrectBoolean(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                z := TRUE;
+                ! (y%z);
+                y := FALSE
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
 	// Tests from Google doc
 	@Test
 	void inputToConst(TestInfo testInfo) throws PLPException {

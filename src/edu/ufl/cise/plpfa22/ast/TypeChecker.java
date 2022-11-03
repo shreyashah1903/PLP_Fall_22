@@ -171,9 +171,41 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public Object visitExpressionBinary(ExpressionBinary expressionBinary, Object arg) throws PLPException {
-        Types.Type type1 = (Types.Type) expressionBinary.e0.visit(this, arg);
-        Types.Type type2 = (Types.Type) expressionBinary.e1.visit(this, arg);
+        Expression leftExpr = expressionBinary.e0;
+        Expression rightExpr = expressionBinary.e1;
+
+        // Required to set type for ExpressionIdent from declaration
+        if (leftExpr instanceof ExpressionIdent) {
+            leftExpr.visit(this, arg);
+        }
+        if (rightExpr instanceof ExpressionIdent) {
+            rightExpr.visit(this, arg);
+        }
+        Types.Type exprType = expressionBinary.getType();
         Kind kind = expressionBinary.op.getKind();
+
+        Type type1 = leftExpr.getType();
+        Type type2 = rightExpr.getType();
+
+        // FIXME @Sh -> Break this
+        if (isAnyEqualOperator(kind)) {
+            if (type1 != null && type2 == null) {
+                rightExpr.setType(type1);
+            }
+            else if (type2 != null && type1 == null) {
+               leftExpr.setType(type2);
+            }
+        }
+
+        type1 = (Types.Type) leftExpr.visit(this, arg);
+        type2 = (Types.Type) rightExpr.visit(this, arg);
+
+        if (kind == Kind.PLUS && exprType != null) {
+            setExpressionType(exprType, leftExpr, expressionBinary);
+            setExpressionType(exprType, rightExpr, expressionBinary);
+        }
+
+        printOutput("visitExpressionBinary kind:"+kind + " e0:"+expressionBinary.e0);
 
         if (type1 != null && type2 != null && !type1.equals(type2)) {
             throw new TypeCheckException("Types should be same");
@@ -182,47 +214,61 @@ public class TypeChecker implements ASTVisitor {
         isAnyChangesMade = type1 == null || type2 == null;
 
         if (type1 == null && type2 != null) {
-            Expression expression = expressionBinary.e0;
-            expression.setType(type2);
+            leftExpr.setType(type2);
         } else if (type1 != null && type2 == null) {
-            Expression expression = expressionBinary.e1;
-            expression.setType(type1);
+            rightExpr.setType(type1);
         }
 
-        type1 = expressionBinary.e0.getType();
-        type2 = expressionBinary.e1.getType();
+        type1 = leftExpr.getType();
+        type2 = rightExpr.getType();
 
         printOutput("visitExpressionBinary type1:"+type1 + " type2:"+type2);
 
+        checkBinaryExpError(expressionBinary, kind, type1, type2);
+        printOutput("TypeChecker- visitExpressionBinary type1:" + type1 + " Type2:" + type2);
+        return expressionBinary.getType();
+    }
+
+    private void checkBinaryExpError(ExpressionBinary expressionBinary, Kind kind, Type type1, Type type2) throws TypeCheckException {
         if (isTreeTraversedOnce && type1 == null && type2 == null) {
             throw new TypeCheckException("Types are not known for LHS and RHS.");
         }
-        // TODO Handle more cases
-        if (type1 != null && type2 != null) {
+
+        if (type1 != null && type1.equals(type2)) {
             if (isAnyEqualOperator(kind)) {
                 expressionBinary.setType(Type.BOOLEAN);
             }
-            else if (type1.equals(Types.Type.NUMBER)) {
-                expressionBinary.setType(Types.Type.NUMBER);
+            else if ((type1 == Type.NUMBER || type1 == Type.STRING || type1 == Type.BOOLEAN) && (kind == Kind.PLUS)) {
+                expressionBinary.setType(type1);
             }
-            else if (type1.equals(Type.STRING)) {
-                expressionBinary.setType(Types.Type.STRING);
+            else if ((type1 == Type.NUMBER) && (kind == Kind.MINUS || kind == Kind.MOD || kind == Kind.DIV)) {
+                expressionBinary.setType(type1);
+            }
+            else if ((type1 == Type.NUMBER || type1 == Type.BOOLEAN) && (kind == Kind.TIMES)) {
+                expressionBinary.setType(type1);
+            }
+            else {
+                throw new TypeCheckException("Operation not allowed");
             }
         }
-        printOutput("TypeChecker- visitExpressionBinary type1:" + type1 + " Type2:" + type2);
-        return expressionBinary.getType();
     }
 
     private void setExpressionType(Type type, Expression expression, ExpressionBinary expressionBinary) {
         if (expression instanceof ExpressionIdent) {
             ((ExpressionIdent) expression).getDec().setType(type);
+            expression.setType(type);
         } else if (expression instanceof ExpressionBinary) {
             Expression e0 = ((ExpressionBinary) expression).e0;
             Expression e1 = ((ExpressionBinary) expression).e1;
 
-            // Set expression type for child expressions
-            setExpressionType(type, e0, expressionBinary);
-            setExpressionType(type, e1, expressionBinary);
+            Kind kind = expressionBinary.op.getKind();
+
+            //FIXME @Sh -> Break this
+            if (kind == Kind.EQ) {
+                // Set expression type for child expressions
+                setExpressionType(type, e0, expressionBinary);
+                setExpressionType(type, e1, expressionBinary);
+            }
         }
         expressionBinary.setType(type);
     }
