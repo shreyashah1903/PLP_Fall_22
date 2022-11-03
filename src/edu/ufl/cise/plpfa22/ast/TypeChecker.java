@@ -200,7 +200,7 @@ public class TypeChecker implements ASTVisitor {
         type1 = (Types.Type) leftExpr.visit(this, arg);
         type2 = (Types.Type) rightExpr.visit(this, arg);
 
-        if (kind == Kind.PLUS && exprType != null) {
+        if (isArithmeticOperator(kind) && exprType != null) {
             setExpressionType(exprType, leftExpr, expressionBinary);
             setExpressionType(exprType, rightExpr, expressionBinary);
         }
@@ -227,6 +227,10 @@ public class TypeChecker implements ASTVisitor {
         checkBinaryExpError(expressionBinary, kind, type1, type2);
         printOutput("TypeChecker- visitExpressionBinary type1:" + type1 + " Type2:" + type2);
         return expressionBinary.getType();
+    }
+
+    private boolean isArithmeticOperator(Kind kind) {
+        return kind == Kind.TIMES || kind == Kind.PLUS || kind == Kind.MINUS || kind == Kind.DIV || kind == Kind.MOD;
     }
 
     private void checkBinaryExpError(ExpressionBinary expressionBinary, Kind kind, Type type1, Type type2) throws TypeCheckException {
@@ -261,16 +265,10 @@ public class TypeChecker implements ASTVisitor {
             Expression e0 = ((ExpressionBinary) expression).e0;
             Expression e1 = ((ExpressionBinary) expression).e1;
 
-            Kind kind = expressionBinary.op.getKind();
-
-            //FIXME @Sh -> Break this
-            if (kind == Kind.EQ) {
-                // Set expression type for child expressions
-                setExpressionType(type, e0, expressionBinary);
-                setExpressionType(type, e1, expressionBinary);
-            }
+            // Set expression type for child expressions
+            setExpressionType(type, e0, expressionBinary);
+            setExpressionType(type, e1, expressionBinary);
         }
-        expressionBinary.setType(type);
     }
 
     private boolean isAnyEqualOperator(Kind kind) {
