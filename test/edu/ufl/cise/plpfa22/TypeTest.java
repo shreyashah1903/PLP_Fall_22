@@ -921,6 +921,20 @@ void testAssignIntToString(TestInfo testInfo) {
 		runTest(input, testInfo, TypeCheckException.class);
 	}
 
+
+	@Test
+	void ss_Test10(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                	x := 10;
+                	! x
+                END
+                .
+                """;
+		runTest(input, testInfo);
+	}
+
 	// Tests from Google doc
 	@Test
 	void inputToConst(TestInfo testInfo) throws PLPException {

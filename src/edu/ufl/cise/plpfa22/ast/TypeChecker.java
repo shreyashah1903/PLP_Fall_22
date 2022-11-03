@@ -239,7 +239,7 @@ public class TypeChecker implements ASTVisitor {
         }
 
         if (type1 != null && type1.equals(type2)) {
-            if (isAnyEqualOperator(kind)) {
+            if (isAnyEqualOperator(kind) && type1 != Type.PROCEDURE) {
                 expressionBinary.setType(Type.BOOLEAN);
             }
             else if ((type1 == Type.NUMBER || type1 == Type.STRING || type1 == Type.BOOLEAN) && (kind == Kind.PLUS)) {
