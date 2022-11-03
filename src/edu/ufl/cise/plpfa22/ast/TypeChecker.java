@@ -7,9 +7,6 @@ import static edu.ufl.cise.plpfa22.IToken.Kind;
 import static edu.ufl.cise.plpfa22.LogHelper.printOutput;
 import static edu.ufl.cise.plpfa22.ast.Types.Type;
 
-//TODO 1. Check if/while guard cases
-//     2. Check BinaryExpression and handle all operators
-//     3. What if all variables are typed? We don't need an extra pass
 
 public class TypeChecker implements ASTVisitor {
     private boolean isTreeTraversedOnce = false;
@@ -157,14 +154,13 @@ public class TypeChecker implements ASTVisitor {
     public Object visitStatementWhile(StatementWhile statementWhile, Object arg) throws PLPException {
         Type type = (Type) statementWhile.expression.visit(this, arg);
         printOutput("visitStatementWhile -- type:" + type);
-        //FIXME Shrey Fix this :D
         checkGuardCondition(type);
         statementWhile.statement.visit(this, arg);
         return null;
     }
 
     private void checkGuardCondition(Type type) throws TypeCheckException {
-        if (isTreeTraversedOnce && !type.equals(Type.BOOLEAN)) {
+        if (type != null && !type.equals(Type.BOOLEAN)) {
             throw new TypeCheckException("Guard condition should be BOOLEAN but found " + type);
         }
     }
