@@ -953,6 +953,22 @@ void testAssignIntToString(TestInfo testInfo) {
 		runTest(input, testInfo);
 	}
 
+
+	@Test
+	void ss_Test12(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                CONST a := "HELLO";
+                BEGIN
+                	x := "HAHA";
+                	! (a=x);
+                	z := TRUE
+                END
+                .
+                """;
+		runTest(input, testInfo);
+	}
+
 	// Tests from Google doc
 	@Test
 	void inputToConst(TestInfo testInfo) throws PLPException {
