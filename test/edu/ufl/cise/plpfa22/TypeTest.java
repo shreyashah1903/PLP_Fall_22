@@ -2,6 +2,7 @@ package edu.ufl.cise.plpfa22;
 
 import edu.ufl.cise.plpfa22.ast.ASTNode;
 import edu.ufl.cise.plpfa22.ast.ASTVisitor;
+import edu.ufl.cise.plpfa22.ast.Types;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -766,6 +767,155 @@ void testAssignIntToString(TestInfo testInfo) {
                 ! (y%z);
                 y := FALSE
                 END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+	@Test
+	void ss_Test1(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                y := 20;
+                ! (x-y-z)*z;
+                z := FALSE
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+	@Test
+	void ss_Test2(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                y := 20;
+                ! x*z;
+                z := FALSE
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+	@Test
+	void ss_Test3(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                y := 20;
+                ! x*y;
+                z := FALSE
+                END
+                .
+                """;
+		runTest(input, testInfo);
+	}
+
+	@Test
+	void ss_Test4(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                y := 20;
+                ! x%y;
+                z := FALSE
+                END
+                .
+                """;
+		runTest(input, testInfo);
+	}
+
+	@Test
+	void ss_Test5(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                y := 20;
+                ! x/y;
+                z := FALSE
+                END
+                .
+                """;
+		runTest(input, testInfo);
+	}
+
+
+	@Test
+	void ss_Test6(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := 10;
+                y := TRUE;
+                ! x/y;
+                z := FALSE
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+
+	@Test
+	void ss_Test7(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                BEGIN
+                x := "HELLO";
+                y := 20;
+                ! x*z;
+                z := "ABC"
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+
+	@Test
+	void ss_Test8(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                PROCEDURE p;
+                	! x;
+                PROCEDURE q;
+               		! y;
+                BEGIN
+                x := "HELLO";
+                y := 20;
+                ! (p+q)=z;
+                z := 10
+                END
+                .
+                """;
+		runTest(input, testInfo, TypeCheckException.class);
+	}
+
+
+	@Test
+	void ss_Test9(TestInfo testInfo) throws PLPException {
+		String input = """
+                VAR x, y, z;
+                PROCEDURE p;
+                	! x;
+                PROCEDURE q;
+               		! y;
+              	WHILE (p=q)
+              	DO
+					BEGIN
+					x := "HELLO";
+					y := 20;
+					! y=z;
+					z := 10
+				END
                 .
                 """;
 		runTest(input, testInfo, TypeCheckException.class);
