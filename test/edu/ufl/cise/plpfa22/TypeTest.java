@@ -2,7 +2,6 @@ package edu.ufl.cise.plpfa22;
 
 import edu.ufl.cise.plpfa22.ast.ASTNode;
 import edu.ufl.cise.plpfa22.ast.ASTVisitor;
-import edu.ufl.cise.plpfa22.ast.Types;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -958,7 +957,7 @@ void testAssignIntToString(TestInfo testInfo) {
 	void ss_Test12(TestInfo testInfo) throws PLPException {
 		String input = """
                 VAR x, y, z;
-                CONST a := "HELLO";
+                CONST a = "HELLO";
                 BEGIN
                 	x := "HAHA";
                 	! (a=x);
