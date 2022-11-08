@@ -161,13 +161,19 @@ public class Parser implements IParser {
             case KW_BEGIN -> {
                 List<Statement> statements = new ArrayList<>();
                 consume();
+                boolean lastSemi = false;
                 while (token.getKind() != IToken.Kind.KW_END) {
+                    lastSemi = false;
                     Statement statement1 = handleStatement(token);
-                    if (token.getKind() == IToken.Kind.SEMI) consume();
+                    if (token.getKind() == IToken.Kind.SEMI)  {
+                        lastSemi = true;
+                        consume();
+                    }
                     statements.add(statement1);
                 }
                 match(IToken.Kind.KW_END);
                 consume();
+                if(lastSemi) statements.add(new StatementEmpty(token));
                 statement = new StatementBlock(firstToken, statements);
             }
             case QUESTION -> {
@@ -301,21 +307,4 @@ public class Parser implements IParser {
         }
     }
 
-    private Expression getExpression(IToken token) throws SyntaxException {
-        switch (token.getKind()) {
-            case NUM_LIT -> {
-                return new ExpressionNumLit(token);
-            }
-            case BOOLEAN_LIT -> {
-                return new ExpressionBooleanLit(token);
-            }
-            case STRING_LIT -> {
-                return new ExpressionStringLit(token);
-            }
-            case IDENT -> {
-                return new ExpressionIdent(token);
-            }
-            default -> throw new SyntaxException();
-        }
-    }
 }
