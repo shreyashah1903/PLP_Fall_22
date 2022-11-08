@@ -1099,15 +1099,15 @@ void testAssignIntToString(TestInfo testInfo) {
 	@Test
 	void test_11(TestInfo testInfo) throws PLPException {
 		String input = """
-VAR abc;
-PROCEDURE hello;
-BEGIN
-WHILE abc#0
-DO
-abc := abc-1;
-END;
-.
-""";
+			VAR abc;
+			PROCEDURE hello;
+			BEGIN
+			WHILE abc#0
+			DO
+			abc := abc-1;
+			END;
+			.
+			""";
 		runTest(input, testInfo);
 	}
 
@@ -1160,8 +1160,7 @@ END;
 				END
 				.
 				""";
-		runTest(input, testInfo, TypeCheckException.class);
-
+		runTest(input, testInfo);
 	}
 
 
@@ -1187,16 +1186,15 @@ END;
 	@Test
 	void test_21(TestInfo testInfo) throws PLPException {
 		String input = """
-CONST a = 3;
-VAR x,y;
-BEGIN
-!a;
-x:=3;
-x:=x-y;
-END
-.
-""";
-
+			CONST a = 3;
+			VAR x,y;
+			BEGIN
+			!a;
+			x:=3;
+			x:=x-y;
+			END
+			.
+			""";
 		runTest(input, testInfo);
 
 	}
@@ -1204,38 +1202,38 @@ END
 	@Test
 	void test_22(TestInfo testInfo) throws PLPException {
 		String input = """
-CONST a = 3;
-VAR x,y,z;
-PROCEDURE p;
-CONST a = 4;
-VAR y,z; //added value to this z
-PROCEDURE q;
-CONST a=5;
-VAR z;
-BEGIN
-x:=a;
-z:=a;
-! "this is q";
-!x;
-!z
-END;
-BEGIN
-x := a;
-y := a;
-z := a;
-! "this is p";
-!x;
-!z;
-CALL q;
-END;
-BEGIN
-!a;
-x := a;
-y := a*2;
-z := a*3;
-CALL p;
-END .
-""";
+			CONST a = 3;
+			VAR x,y,z;
+			PROCEDURE p;
+			CONST a = 4;
+			VAR y,z; //added value to this z
+			PROCEDURE q;
+			CONST a=5;
+			VAR z;
+			BEGIN
+			x:=a;
+			z:=a;
+			! "this is q";
+			!x;
+			!z
+			END;
+			BEGIN
+			x := a;
+			y := a;
+			z := a;
+			! "this is p";
+			!x;
+			!z;
+			CALL q;
+			END;
+			BEGIN
+			!a;
+			x := a;
+			y := a*2;
+			z := a*3;
+			CALL p;
+			END .
+			""";
 		runTest(input, testInfo);
 
 

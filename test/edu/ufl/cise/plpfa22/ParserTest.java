@@ -1922,4 +1922,72 @@ class ParserTest {
 
 	}
 
+	// Test to check if an empty statement is appended at the end if the last statement in
+	// BEGIN...END ends with a semi-colon.
+	@Test
+	void test__42() throws PLPException {
+		String input = """
+				CONST n=42, s="this is a string", x=TRUE;
+				VAR a,b,c,d,e,f,g;
+				BEGIN
+				a := 4;
+				b := n + 4;
+				c := b - a;
+				d := s + s;
+				e := a*b;
+				f := a/b;
+				g := a%b;
+				END
+				.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(3, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(7, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+		StatementBlock statementBlock = (StatementBlock) v0.statement;
+		List<Statement> statements = statementBlock.statements;
+		assertEquals(8, statements.size());
+		assertThat("", statements.get(7), instanceOf(StatementEmpty.class));
+	}
+
+	// If the last statement inside BEGIN..END does not end with
+	// a semi-colon then no empty statement should be added
+	@Test
+	void test__43() throws PLPException {
+		String input = """
+				CONST n=42, s="this is a string", x=TRUE;
+				VAR a,b,c,d,e,f,g;
+				BEGIN
+				a := 4;
+				b := n + 4;
+				c := b - a;
+				d := s + s;
+				e := a*b;
+				f := a/b;
+				g := a%b
+				END
+				.
+				""";
+		ASTNode ast = getAST(input);
+		assertThat("", ast, instanceOf(Program.class));
+		Block v0 = ((Program) ast).block;
+		assertThat("", v0, instanceOf(Block.class));
+		List<ConstDec> v1 = ((Block) v0).constDecs;
+		assertEquals(3, v1.size());
+		List<VarDec> v2 = ((Block) v0).varDecs;
+		assertEquals(7, v2.size());
+		List<ProcDec> v3 = ((Block) v0).procedureDecs;
+		assertEquals(0, v3.size());
+		StatementBlock statementBlock = (StatementBlock) v0.statement;
+		List<Statement> statements = statementBlock.statements;
+		assertEquals(7, statements.size());
+		assertThat("", statements.get(6), instanceOf(StatementAssign.class));
+	}
+
 }
