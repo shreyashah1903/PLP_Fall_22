@@ -193,12 +193,16 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitExpressionStringLit(ExpressionStringLit expressionStringLit, Object arg) throws PLPException {
-		throw new UnsupportedOperationException();
+		MethodVisitor mv = (MethodVisitor)arg;
+		mv.visitLdcInsn(expressionStringLit.getFirstToken().getStringValue());
+		return null;
 	}
 
 	@Override
 	public Object visitExpressionBooleanLit(ExpressionBooleanLit expressionBooleanLit, Object arg) throws PLPException {
-		throw new UnsupportedOperationException();
+		MethodVisitor mv = (MethodVisitor)arg;
+		mv.visitLdcInsn(expressionBooleanLit.getFirstToken().getBooleanValue());
+		return null;
 	}
 
 	@Override
