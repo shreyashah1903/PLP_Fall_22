@@ -1,31 +1,12 @@
 package edu.ufl.cise.plpfa22;
 
+import edu.ufl.cise.plpfa22.ast.*;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import edu.ufl.cise.plpfa22.ast.ASTVisitor;
 import edu.ufl.cise.plpfa22.IToken.Kind;
-import edu.ufl.cise.plpfa22.ast.Block;
-import edu.ufl.cise.plpfa22.ast.ConstDec;
-import edu.ufl.cise.plpfa22.ast.ExpressionBinary;
-import edu.ufl.cise.plpfa22.ast.ExpressionBooleanLit;
-import edu.ufl.cise.plpfa22.ast.ExpressionIdent;
-import edu.ufl.cise.plpfa22.ast.ExpressionNumLit;
-import edu.ufl.cise.plpfa22.ast.ExpressionStringLit;
-import edu.ufl.cise.plpfa22.ast.Ident;
-import edu.ufl.cise.plpfa22.ast.ProcDec;
-import edu.ufl.cise.plpfa22.ast.Program;
-import edu.ufl.cise.plpfa22.ast.StatementAssign;
-import edu.ufl.cise.plpfa22.ast.StatementBlock;
-import edu.ufl.cise.plpfa22.ast.StatementCall;
-import edu.ufl.cise.plpfa22.ast.StatementEmpty;
-import edu.ufl.cise.plpfa22.ast.StatementIf;
-import edu.ufl.cise.plpfa22.ast.StatementInput;
-import edu.ufl.cise.plpfa22.ast.StatementOutput;
-import edu.ufl.cise.plpfa22.ast.StatementWhile;
 import edu.ufl.cise.plpfa22.ast.Types.Type;
-import edu.ufl.cise.plpfa22.ast.VarDec;
 
 public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
@@ -123,7 +104,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitStatementBlock(StatementBlock statementBlock, Object arg) throws PLPException {
-		throw new UnsupportedOperationException();
+		for(Statement statement: statementBlock.statements) {
+			statement.visit(this, arg);
+		}
+		return null;
 	}
 
 	@Override
