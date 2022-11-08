@@ -1094,7 +1094,152 @@ void testAssignIntToString(TestInfo testInfo) {
 	}
 
 
+	// FIXME Failed tests. 7/9 tests fail at Parser since last statement inside BEGIN with ; means an empty statement
 
+	@Test
+	void test_11(TestInfo testInfo) throws PLPException {
+		String input = """
+VAR abc;
+PROCEDURE hello;
+BEGIN
+WHILE abc#0
+DO
+abc := abc-1;
+END;
+.
+""";
+		runTest(input, testInfo);
+	}
+
+	@Test
+	void test_12(TestInfo testInfo) throws PLPException {
+		String input = """
+				CONST n=42, s="this is a string", x=TRUE;
+				VAR a,b,c,d,e,f,g;
+				BEGIN
+				a := 4;
+				b := n + 4;
+				c := b - a;
+				d := s + s;
+				e := a*b;
+				f := a/b;
+				g := a%b;
+				END
+				.
+				""";
+		runTest(input, testInfo);
+
+	}
+
+
+	@Test
+	void test_14(TestInfo testInfo) throws PLPException {
+		String input = """
+				CONST n="42", s="this is a string", x="TRUE";
+				VAR a,b,c,d,e,f,g;
+				BEGIN
+				a := "4";
+				b := n + "4";
+				d := s + s;
+				END
+				.
+				""";
+
+		runTest(input, testInfo);
+
+	}
+	@Test
+	void test_15(TestInfo testInfo) throws PLPException {
+		String input = """
+				VAR x,y,z;
+				BEGIN
+				x := 0;
+				y := 1;
+				z := FALSE;
+				! (x = y) * z
+				END
+				.
+				""";
+		runTest(input, testInfo, TypeCheckException.class);
+
+	}
+
+
+	@Test
+	void test_20(TestInfo testInfo) throws PLPException {
+		String input = """
+				CONST a=3;
+				VAR x,y,z;
+				PROCEDURE p;
+				VAR j;
+				BEGIN
+				? x;
+				IF x = 0 THEN ! j ;
+				WHILE j < 24 DO z:=333
+				END;
+				! z
+				.
+				""";
+		runTest(input, testInfo);
+
+	}
+
+	@Test
+	void test_21(TestInfo testInfo) throws PLPException {
+		String input = """
+CONST a = 3;
+VAR x,y;
+BEGIN
+!a;
+x:=3;
+x:=x-y;
+END
+.
+""";
+
+		runTest(input, testInfo);
+
+	}
+
+	@Test
+	void test_22(TestInfo testInfo) throws PLPException {
+		String input = """
+CONST a = 3;
+VAR x,y,z;
+PROCEDURE p;
+CONST a = 4;
+VAR y,z; //added value to this z
+PROCEDURE q;
+CONST a=5;
+VAR z;
+BEGIN
+x:=a;
+z:=a;
+! "this is q";
+!x;
+!z
+END;
+BEGIN
+x := a;
+y := a;
+z := a;
+! "this is p";
+!x;
+!z;
+CALL q;
+END;
+BEGIN
+!a;
+x := a;
+y := a*2;
+z := a*3;
+CALL p;
+END .
+""";
+		runTest(input, testInfo);
+
+
+	}
 
 }
 
