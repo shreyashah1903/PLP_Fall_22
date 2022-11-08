@@ -170,11 +170,11 @@ public class TypeChecker implements ASTVisitor {
         Expression leftExpr = expressionBinary.e0;
         Expression rightExpr = expressionBinary.e1;
 
-        // Required to set type for ExpressionIdent from declaration
-        if (leftExpr instanceof ExpressionIdent) {
+        // Set type for anything but ExpressionBinary
+        if (!(leftExpr instanceof ExpressionBinary)) {
             leftExpr.visit(this, arg);
         }
-        if (rightExpr instanceof ExpressionIdent) {
+        if (!(rightExpr instanceof ExpressionBinary)) {
             rightExpr.visit(this, arg);
         }
         Types.Type exprType = expressionBinary.getType();
