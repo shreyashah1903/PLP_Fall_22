@@ -197,8 +197,8 @@ public class TypeChecker implements ASTVisitor {
         type2 = (Types.Type) rightExpr.visit(this, arg);
 
         if (isArithmeticOperator(kind) && exprType != null) {
-            setExpressionType(exprType, leftExpr, expressionBinary);
-            setExpressionType(exprType, rightExpr, expressionBinary);
+            if (leftExpr.getType() == null) setExpressionType(exprType, leftExpr, expressionBinary);
+            if (rightExpr.getType() == null) setExpressionType(exprType, rightExpr, expressionBinary);
         }
 
         printOutput("visitExpressionBinary kind:"+kind + " e0:"+expressionBinary.e0);
