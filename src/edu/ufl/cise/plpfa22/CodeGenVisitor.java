@@ -136,47 +136,80 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			case DIV -> mv.visitInsn(IDIV);
 			case MOD -> mv.visitInsn(IREM);
 			case EQ -> {
-				Label labelNumEqFalseBr = new Label();
-				mv.visitJumpInsn(IF_ICMPNE, labelNumEqFalseBr);
-				mv.visitInsn(ICONST_1);
-				Label labelPostNumEq = new Label();
-				mv.visitJumpInsn(GOTO, labelPostNumEq);
-				mv.visitLabel(labelNumEqFalseBr);
-				mv.visitInsn(ICONST_0);
-				mv.visitLabel(labelPostNumEq);
+					visitExpBinaryOp(mv, IF_ICMPEQ);
 			}
 			case NEQ -> {
-				throw new UnsupportedOperationException();
+				visitExpBinaryOp(mv, IF_ICMPNE);
 			}
 			case LT -> {
-				throw new UnsupportedOperationException();
+				visitExpBinaryOp(mv, IF_ICMPLT);
 			}
 			case LE -> {
-				throw new UnsupportedOperationException();
+				visitExpBinaryOp(mv, IF_ICMPLE);
 			}
 			case GT -> {
-				throw new UnsupportedOperationException();
+				visitExpBinaryOp(mv, IF_ICMPGT);
 			}
 			case GE -> {
-				throw new UnsupportedOperationException();
+				visitExpBinaryOp(mv, IF_ICMPGE);
 			}
 			default -> {
 				throw new IllegalStateException("code gen bug in visitExpressionBinary NUMBER");
 			}
 			}
-			;
 		}
 		case BOOLEAN -> {
-			throw new UnsupportedOperationException();
+			expressionBinary.e0.visit(this, arg);
+			expressionBinary.e1.visit(this, arg);
+			switch (op) {
+				case PLUS -> mv.visitInsn(IADD);
+				case MINUS -> mv.visitInsn(ISUB);
+				case TIMES -> mv.visitInsn(IMUL);
+				case DIV -> mv.visitInsn(IDIV);
+				case MOD -> mv.visitInsn(IREM);
+				case EQ -> {
+					visitExpBinaryOp(mv, IF_ICMPEQ);
+				}
+				case NEQ -> {
+					visitExpBinaryOp(mv, IF_ICMPNE);
+				}
+				case LT -> {
+					visitExpBinaryOp(mv, IF_ICMPLT);
+				}
+				case LE -> {
+					visitExpBinaryOp(mv, IF_ICMPLE);
+				}
+				case GT -> {
+					visitExpBinaryOp(mv, IF_ICMPGT);
+				}
+				case GE -> {
+					visitExpBinaryOp(mv, IF_ICMPGE);
+				}
+				default -> {
+					throw new IllegalStateException("code gen bug in visitExpressionBinary BOOLEAN");
+				}
+			}
 		}
 		case STRING -> {
-			throw new UnsupportedOperationException();
+			expressionBinary.e0.visit(this, arg);
+			expressionBinary.e1.visit(this, arg);
 		}
 		default -> {
 			throw new IllegalStateException("code gen bug in visitExpressionBinary");
 		}
 		}
 		return null;
+	}
+
+	private void visitExpBinaryOp(MethodVisitor mv, int opcode) {
+			Label labelNumEqFalseBr = new Label();
+			mv.visitJumpInsn(opcode, labelNumEqFalseBr);
+			mv.visitInsn(ICONST_1);
+			Label labelPostNumEq = new Label();
+			mv.visitJumpInsn(GOTO, labelPostNumEq);
+			mv.visitLabel(labelNumEqFalseBr);
+			mv.visitInsn(ICONST_0);
+			mv.visitLabel(labelPostNumEq);
 	}
 
 	@Override
