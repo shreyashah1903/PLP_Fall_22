@@ -191,8 +191,49 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			}
 		}
 		case STRING -> {
+			Label start = new Label();
+			Label end = new Label();
 			expressionBinary.e0.visit(this, arg);
 			expressionBinary.e1.visit(this, arg);
+
+			switch (op) {
+				case PLUS -> {
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
+				}
+				case EQ -> {
+					mv.visitJumpInsn(IF_ACMPEQ, start);
+					mv.visitLdcInsn(false);
+				}
+				case NEQ -> {
+					mv.visitJumpInsn(IF_ACMPNE, start);
+					mv.visitLdcInsn(false);
+				}
+				case LT -> {
+					mv.visitInsn(Opcodes.SWAP);
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
+				}
+				case LE -> {
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
+
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
+					mv.visitJumpInsn(IF_ACMPEQ, start);
+					mv.visitLdcInsn(false);
+				}
+				case GT -> {
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
+				}
+				case GE -> {
+
+				}
+				default -> {
+					throw new IllegalStateException("code gen bug in visitExpressionBinary BOOLEAN");
+				}
+			}
+			mv.visitJumpInsn(Opcodes.GOTO, end);
+			mv.visitLabel(start);
+
+			mv.visitLdcInsn(true);
+			mv.visitLabel(end);
 		}
 		default -> {
 			throw new IllegalStateException("code gen bug in visitExpressionBinary");
