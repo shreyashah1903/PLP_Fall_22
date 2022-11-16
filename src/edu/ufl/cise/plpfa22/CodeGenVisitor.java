@@ -162,11 +162,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			expressionBinary.e0.visit(this, arg);
 			expressionBinary.e1.visit(this, arg);
 			switch (op) {
-				case PLUS -> mv.visitInsn(IADD);
-				case MINUS -> mv.visitInsn(ISUB);
-				case TIMES -> mv.visitInsn(IMUL);
-				case DIV -> mv.visitInsn(IDIV);
-				case MOD -> mv.visitInsn(IREM);
+				case PLUS -> mv.visitInsn(IOR);
+				case TIMES -> mv.visitInsn(IAND);
 				case EQ -> {
 					visitExpBinaryOp(mv, IF_ICMPNE);
 				}
