@@ -688,6 +688,52 @@ public class CodeGenTestsGDoc {
         System.setErr(originalErr);
     }
 
+
+    @DisplayName("stringAndBooleanMath")
+    @Test
+    public void stringAndBooleanMath(TestInfo testInfo) throws Exception {
+        String input = """
+            BEGIN
+            ! "Red" + "Blue";
+            ! FALSE * FALSE;
+            ! FALSE * TRUE;
+            ! TRUE * TRUE;
+            ! TRUE * FALSE;
+            ! FALSE + FALSE;
+            ! FALSE + TRUE;
+            ! TRUE + TRUE;
+            ! TRUE + FALSE;
+            END
+            .
+            """;
+
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
+        show(CodeGenUtils.bytecodeToString(bytecode));
+
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassAndRunMethod(bytecode, className, "main", args);
+        String expected = """
+            RedBlue
+            false
+            false
+            true
+            false
+            false
+            true
+            true
+            true
+            """;
+        assertEquals(expected, outContent.toString().replaceAll("\\r\\n?", "\n"));
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
+
 }
 
 
