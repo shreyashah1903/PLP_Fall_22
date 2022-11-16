@@ -9,6 +9,7 @@ import org.junit.jupiter.api.TestInfo;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+// TODO: IMPORTANT CHECK EACH TEST AND THE TYPE, NEST AND SCOPE for each statement, var , etc.
 @DisplayNameGeneration(DisplayNameGenerator.Standard.class)
 class TypeTest{
 
