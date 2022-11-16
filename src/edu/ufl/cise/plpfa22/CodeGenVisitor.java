@@ -212,21 +212,18 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 					mv.visitLdcInsn(false);
 				}
 				case LT -> {
-					mv.visitInsn(Opcodes.SWAP);
+//					mv.visitInsn(Opcodes.SWAP);
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
 				}
 				case LE -> {
+					mv.visitInsn(Opcodes.SWAP);
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
-
-					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
-					mv.visitJumpInsn(IF_ACMPEQ, start);
-					mv.visitLdcInsn(false);
 				}
 				case GT -> {
-					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "endsWith", "(Ljava/lang/String;)Z", false);
 				}
 				case GE -> {
-
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "endsWith", "(Ljava/lang/String;)Z", false);
 				}
 				default -> {
 					throw new IllegalStateException("code gen bug in visitExpressionBinary BOOLEAN");
