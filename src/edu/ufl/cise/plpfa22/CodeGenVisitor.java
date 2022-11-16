@@ -136,22 +136,22 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			case DIV -> mv.visitInsn(IDIV);
 			case MOD -> mv.visitInsn(IREM);
 			case EQ -> {
-					visitExpBinaryOp(mv, IF_ICMPEQ);
-			}
-			case NEQ -> {
 				visitExpBinaryOp(mv, IF_ICMPNE);
 			}
+			case NEQ -> {
+				visitExpBinaryOp(mv, IF_ICMPEQ);
+			}
 			case LT -> {
-				visitExpBinaryOp(mv, IF_ICMPLT);
+				visitExpBinaryOp(mv, IF_ICMPGE);
 			}
 			case LE -> {
-				visitExpBinaryOp(mv, IF_ICMPLE);
-			}
-			case GT -> {
 				visitExpBinaryOp(mv, IF_ICMPGT);
 			}
+			case GT -> {
+				visitExpBinaryOp(mv, IF_ICMPLE);
+			}
 			case GE -> {
-				visitExpBinaryOp(mv, IF_ICMPGE);
+				visitExpBinaryOp(mv, IF_ICMPLT);
 			}
 			default -> {
 				throw new IllegalStateException("code gen bug in visitExpressionBinary NUMBER");
@@ -168,22 +168,22 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 				case DIV -> mv.visitInsn(IDIV);
 				case MOD -> mv.visitInsn(IREM);
 				case EQ -> {
-					visitExpBinaryOp(mv, IF_ICMPEQ);
-				}
-				case NEQ -> {
 					visitExpBinaryOp(mv, IF_ICMPNE);
 				}
+				case NEQ -> {
+					visitExpBinaryOp(mv, IF_ICMPEQ);
+				}
 				case LT -> {
-					visitExpBinaryOp(mv, IF_ICMPLT);
+					visitExpBinaryOp(mv, IF_ICMPGE);
 				}
 				case LE -> {
-					visitExpBinaryOp(mv, IF_ICMPLE);
-				}
-				case GT -> {
 					visitExpBinaryOp(mv, IF_ICMPGT);
 				}
+				case GT -> {
+					visitExpBinaryOp(mv, IF_ICMPLE);
+				}
 				case GE -> {
-					visitExpBinaryOp(mv, IF_ICMPGE);
+					visitExpBinaryOp(mv, IF_ICMPLT);
 				}
 				default -> {
 					throw new IllegalStateException("code gen bug in visitExpressionBinary BOOLEAN");
