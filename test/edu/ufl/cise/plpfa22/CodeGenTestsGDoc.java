@@ -733,6 +733,39 @@ public class CodeGenTestsGDoc {
         System.setErr(originalErr);
     }
 
+    //Self-added tests
+    @DisplayName("stringRelOpsGeCase")
+    @Test
+    public void stringRelOpsGeCase(TestInfo testInfo) throws Exception {
+        String input = """
+				BEGIN
+				! "FA" >= "FALSE";
+				! "false" >= "FALSE";  //Case mismatch so not true
+				! "FALSE" >= "SE";				
+				END
+				.
+				""";
+
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
+        show(CodeGenUtils.bytecodeToString(bytecode));
+
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassAndRunMethod(bytecode, className, "main", args);
+        String expected = """
+				false
+				false
+				true
+				""";
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
 
 }
 
