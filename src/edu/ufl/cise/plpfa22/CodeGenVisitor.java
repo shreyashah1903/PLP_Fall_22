@@ -20,6 +20,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	
 	ClassWriter classWriter;
 
+	private static final String BOOLEAN_NOT_CLASS = "edu/ufl/cise/plpfa22/BooleanNotOp";
+
 	
 	public CodeGenVisitor(String className, String packageName, String sourceFileName) {
 		super();
@@ -218,17 +220,12 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 					mv.visitInsn(DUP2);
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
                     mv.visitVarInsn(ISTORE, 1);
-//					mv.visitInsn(POP);
 
-//					expressionBinary.e0.visit(this, arg);
-//					expressionBinary.e1.visit(this, arg);
-					mv.visitMethodInsn(INVOKEVIRTUAL, JAVA_LANG_STRING, "equals", JAVA_LANG_STRING_DESC, false);
-//					mv.visitJumpInsn(IF_ACMPNE, start);
-//					mv.visitLdcInsn(false);
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "equals", "(Ljava/lang/Object;)Z", false);
+					mv.visitMethodInsn(INVOKESTATIC, BOOLEAN_NOT_CLASS, "not", "(Z)Z",false);
 
                     mv.visitVarInsn(ILOAD, 1);
 					mv.visitInsn(IAND);
-					//mv.visitLdcInsn(false); //LDC 0
 
 				}
 				case LE -> {
@@ -236,16 +233,13 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
 				}
 				case GT -> {
-					// "FA" > "FALSE" should return false as FALSE is not a suffix of FA and FALSE != FA
-					mv.visitInsn(Opcodes.SWAP);
 					mv.visitInsn(DUP2);
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "endsWith", "(Ljava/lang/String;)Z", false);
 					mv.visitVarInsn(ISTORE, 1);
-					//mv.visitInsn(POP);
 
-//					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/String;)Z", false);
-					mv.visitJumpInsn(IF_ACMPNE, start);
-					mv.visitLdcInsn(false);
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "equals", "(Ljava/lang/Object;)Z", false);
+					mv.visitMethodInsn(INVOKESTATIC, BOOLEAN_NOT_CLASS, "not", "(Z)Z",false);
+
 					mv.visitVarInsn(ILOAD, 1);
 					mv.visitInsn(IAND);
 				}
