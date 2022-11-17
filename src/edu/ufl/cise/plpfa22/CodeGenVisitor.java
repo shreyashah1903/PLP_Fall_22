@@ -10,6 +10,8 @@ import edu.ufl.cise.plpfa22.ast.Types.Type;
 
 public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
+	public static final String JAVA_LANG_STRING = "java/lang/String";
+	public static final String JAVA_LANG_STRING_DESC = "(Ljava/lang/String;)Z";
 	final String packageName;
 	final String className;
 	final String sourceFileName;
@@ -201,7 +203,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 			switch (op) {
 				case PLUS -> {
-					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
+					mv.visitMethodInsn(INVOKEVIRTUAL, JAVA_LANG_STRING, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
 				}
 				case EQ -> {
 					mv.visitJumpInsn(IF_ACMPEQ, start);
@@ -212,15 +214,40 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 					mv.visitLdcInsn(false);
 				}
 				case LT -> {
-//					mv.visitInsn(Opcodes.SWAP);
+					mv.visitInsn(Opcodes.SWAP);
+					mv.visitInsn(DUP2);
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
+                    mv.visitVarInsn(ISTORE, 1);
+//					mv.visitInsn(POP);
+
+//					expressionBinary.e0.visit(this, arg);
+//					expressionBinary.e1.visit(this, arg);
+					mv.visitMethodInsn(INVOKEVIRTUAL, JAVA_LANG_STRING, "equals", JAVA_LANG_STRING_DESC, false);
+//					mv.visitJumpInsn(IF_ACMPNE, start);
+//					mv.visitLdcInsn(false);
+
+                    mv.visitVarInsn(ILOAD, 1);
+					mv.visitInsn(IAND);
+					//mv.visitLdcInsn(false); //LDC 0
+
 				}
 				case LE -> {
 					mv.visitInsn(Opcodes.SWAP);
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
 				}
 				case GT -> {
+					// "FA" > "FALSE" should return false as FALSE is not a suffix of FA and FALSE != FA
+					mv.visitInsn(Opcodes.SWAP);
+					mv.visitInsn(DUP2);
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "endsWith", "(Ljava/lang/String;)Z", false);
+					mv.visitVarInsn(ISTORE, 1);
+					//mv.visitInsn(POP);
+
+//					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/String;)Z", false);
+					mv.visitJumpInsn(IF_ACMPNE, start);
+					mv.visitLdcInsn(false);
+					mv.visitVarInsn(ILOAD, 1);
+					mv.visitInsn(IAND);
 				}
 				case GE -> {
 					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "endsWith", "(Ljava/lang/String;)Z", false);
@@ -229,10 +256,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 					throw new IllegalStateException("code gen bug in visitExpressionBinary BOOLEAN");
 				}
 			}
-			mv.visitJumpInsn(Opcodes.GOTO, end);
+			mv.visitJumpInsn(Opcodes.GOTO, end); //GOTO L0
 			mv.visitLabel(start);
 
-			mv.visitLdcInsn(true);
+			mv.visitLdcInsn(true);//LDC 1
 			mv.visitLabel(end);
 		}
 		default -> {
