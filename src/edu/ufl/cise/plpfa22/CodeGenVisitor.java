@@ -1,12 +1,15 @@
 package edu.ufl.cise.plpfa22;
 
+import edu.ufl.cise.plpfa22.IToken.Kind;
 import edu.ufl.cise.plpfa22.ast.*;
+import edu.ufl.cise.plpfa22.ast.Types.Type;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import edu.ufl.cise.plpfa22.IToken.Kind;
-import edu.ufl.cise.plpfa22.ast.Types.Type;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
@@ -21,6 +24,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	ClassWriter classWriter;
 
 	private static final String BOOLEAN_NOT_CLASS = "edu/ufl/cise/plpfa22/BooleanNotOp";
+	private static final String CLASS_NAME = "edu/ufl/cise/plpfa22/prog";
 
 	
 	public CodeGenVisitor(String className, String packageName, String sourceFileName) {
@@ -71,7 +75,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		//finish up the class
         classWriter.visitEnd();
         //return the bytes making up the classfile
-		return classWriter.toByteArray();
+		byte[] bytes = classWriter.toByteArray();
+		List<CodeGenUtils.GenClass> list = new ArrayList<>();
+		list.add(new CodeGenUtils.GenClass(CLASS_NAME, bytes));
+		return list;
 	}
 
 	@Override
