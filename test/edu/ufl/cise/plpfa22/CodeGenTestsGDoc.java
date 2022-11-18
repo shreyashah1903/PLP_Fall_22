@@ -766,6 +766,97 @@ public class CodeGenTestsGDoc {
         System.setErr(originalErr);
     }
 
+    // Failed tests . Fix was simple. Use String.equals instead of IF_ACMPEQ
+    @DisplayName("Test_3")
+    @Test
+    public void Test_3(TestInfo testInfo) throws Exception {
+
+			String input = """
+        BEGIN
+        ! "Hello "+"World!";
+        ! ("Hello "+"World!") = "Hello World!"
+        END
+                .
+        """;
+
+
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
+        show(CodeGenUtils.bytecodeToString(bytecode));
+
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassAndRunMethod(bytecode, className, "main", args);
+        String expected = """
+				Hello World!
+				true
+				""";
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
+
+
+    @DisplayName("Test_6")
+    @Test
+    public void Test_6(TestInfo testInfo) throws Exception {
+
+        String input = """
+		BEGIN
+			IF ("Is this "+"equal?") = "Is this equal?"
+			THEN
+				BEGIN
+					IF ("STRiNG CoMPaRe" >= "strIng cOmpArE")
+					THEN 
+						BEGIN
+							! "THIS is";
+							! FALSE
+						END;
+					!"This is Equal!"
+				END;
+			IF (("123456" >= "456") + ("456" > "56") + ("123" < "12345"))
+			THEN 
+				BEGIN
+					IF (("123456" >= "456") + ("456" > "56") * ("123" < "12345"))
+					THEN
+						BEGIN 
+							IF ((("123456" >= "456") + ("456" > "56")) * ("123" < "12345"))
+							THEN 
+								! "IF 3 PASSED!";
+							! "IF 2 PASSED!"
+						END;
+					! "IF 1 PASSED!"
+				END
+		END
+	.
+		""";
+
+
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
+        show(CodeGenUtils.bytecodeToString(bytecode));
+
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassAndRunMethod(bytecode, className, "main", args);
+        String expected = """
+				This is Equal!
+				IF 3 PASSED!
+				IF 2 PASSED!
+				IF 1 PASSED!
+				""";
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
 
 }
 

@@ -224,8 +224,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 					mv.visitMethodInsn(INVOKEVIRTUAL, JAVA_LANG_STRING, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
 				}
 				case EQ -> {
-					mv.visitJumpInsn(IF_ACMPEQ, start);
-					mv.visitLdcInsn(false);
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "equals", "(Ljava/lang/Object;)Z", false);
 				}
 				case NEQ -> {
 					mv.visitJumpInsn(IF_ACMPNE, start);
