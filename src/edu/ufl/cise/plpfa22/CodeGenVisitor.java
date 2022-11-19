@@ -9,6 +9,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class CodeGenVisitor implements ASTVisitor, Opcodes {
@@ -83,12 +84,22 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
-		throw new UnsupportedOperationException();
+		statementAssign.expression.visit(this, arg);
+		statementAssign.ident.visit(this, arg);
+
+		return null;
 	}
 
 	@Override
 	public Object visitVarDec(VarDec varDec, Object arg) throws PLPException {
-		throw new UnsupportedOperationException();
+//		Type type = varDec.getType();
+//		MethodVisitor methodVisitor = (MethodVisitor) arg;
+//
+//		if (type == Type.NUMBER) {
+//			methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, String.valueOf(varDec.ident.getText()), "I");
+//		}
+
+		return null;
 	}
 
 	@Override
@@ -291,7 +302,25 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitExpressionIdent(ExpressionIdent expressionIdent, Object arg) throws PLPException {
-		throw new UnsupportedOperationException();
+		System.out.println("VisitExpIdent");
+		MethodVisitor methodVisitor = (MethodVisitor)arg;
+		if (expressionIdent.getDec() instanceof ConstDec) {
+			methodVisitor.visitVarInsn(ALOAD, 0);
+//			methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, String.valueOf(((ConstDec) expressionIdent.getDec()).ident.getText()), convertTypeToByteType(expressionIdent.getDec().getType()));
+//			methodVisitor.visitInsn(SWAP);
+		}
+		else {
+//			Label label0 = new Label();
+//			methodVisitor.visitLabel(label0);
+			methodVisitor.visitVarInsn(ALOAD, 0);
+
+			String name = String.valueOf(((VarDec) expressionIdent.getDec()).ident.getText());
+			System.out.println("ExpressionIdent Name:"+name);
+
+			methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, convertTypeToByteType(expressionIdent.getDec().getType()));
+//			methodVisitor.visitInsn(SWAP);
+		}
+		return null;
 	}
 
 	@Override
@@ -322,7 +351,9 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitConstDec(ConstDec constDec, Object arg) throws PLPException {
-		throw new UnsupportedOperationException();
+//		MethodVisitor mv = (MethodVisitor)arg;
+//		mv.visitLdcInsn(constDec.getFirstToken().get());
+		return null;
 	}
 
 	@Override
@@ -332,7 +363,25 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitIdent(Ident ident, Object arg) throws PLPException {
-		throw new UnsupportedOperationException();
+		System.out.println("visitIdent:"+ Arrays.toString(ident.getText()));
+		MethodVisitor methodVisitor = (MethodVisitor)arg;
+		methodVisitor.visitVarInsn(ALOAD, 0);
+		String name = String.valueOf(((VarDec) ident.getDec()).ident.getText());
+		System.out.println("Ident Name:"+name);
+
+		methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, name, convertTypeToByteType(ident.getDec().getType()));
+//        methodVisitor.visitInsn(SWAP);
+//		methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, ident.getDec().toString(), convertTypeToByteType(ident.getDec().getType()));
+		return null;
+	}
+
+	private String convertTypeToByteType(Type type) {
+		return switch (type) {
+			case NUMBER -> "I";
+			case BOOLEAN -> "Z";
+			case STRING -> "Ljava/lang/String;";
+			case PROCEDURE -> null;
+		};
 	}
 
 }
