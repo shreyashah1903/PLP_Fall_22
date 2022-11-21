@@ -11,6 +11,7 @@ public abstract class Declaration extends ASTNode {
 	
 	Type type;
 	private int nest;
+	String jvmType;
 
 	public Declaration(IToken firstToken) {
 		super(firstToken);
@@ -22,6 +23,15 @@ public abstract class Declaration extends ASTNode {
 
 	public void setType(Type type) {
 		this.type = type;
+		setJvmType(Types.getJvmType(type));
+	}
+
+	public void setJvmType(String type) {
+		this.jvmType = type;
+	}
+
+	public String getJvmType() {
+		return jvmType;
 	}
 
 	public void setNest(int nest) {

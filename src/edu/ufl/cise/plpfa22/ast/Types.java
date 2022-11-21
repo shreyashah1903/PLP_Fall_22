@@ -8,4 +8,13 @@ public class Types {
 	
 	public static enum Type {NUMBER, BOOLEAN, STRING, PROCEDURE};
 
+	public static String getJvmType(Type type) {
+		return switch (type) {
+			case NUMBER -> "I";
+			case BOOLEAN -> "Z";
+			case STRING -> "Ljava/lang/String;";
+			case PROCEDURE -> null;
+		};
+	}
+
 }

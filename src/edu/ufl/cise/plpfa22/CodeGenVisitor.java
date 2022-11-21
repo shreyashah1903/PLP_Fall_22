@@ -148,7 +148,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         Type type = varDec.getType();
 
         System.out.println("Vardec type" + type);
-        FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(varDec.ident.getText()), convertToByteType(type), null, null);
+        FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(varDec.ident.getText()),
+                varDec.getJvmType(), null, null);
         fieldVisitor.visitEnd();
         return null;
     }
@@ -365,7 +366,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
             name = String.valueOf(((VarDec) expressionIdent.getDec()).ident.getText());
             System.out.println("ExpressionIdent Name:" + name);
         }
-        methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, convertToByteType(expressionIdent.getDec().getType()));
+        methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, expressionIdent.getDec().getJvmType());
         return null;
     }
 
@@ -399,7 +400,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     public Object visitConstDec(ConstDec constDec, Object arg) throws PLPException {
         Type type = constDec.getType();
         System.out.println("Constdec type" + type);
-        FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(constDec.ident.getText()), convertToByteType(type), null, null);
+        FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(constDec.ident.getText()),
+                constDec.getJvmType(), null, null);
         fieldVisitor.visitEnd();
         return null;
     }
@@ -420,17 +422,9 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         String name = String.valueOf(((VarDec) ident.getDec()).ident.getText());
         System.out.println("Ident Name:" + name);
 
-        methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, name, convertToByteType(ident.getDec().getType()));
+        methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, name, ident.getDec().getJvmType());
         return null;
     }
 
-    private String convertToByteType(Type type) {
-        return switch (type) {
-            case NUMBER -> "I";
-            case BOOLEAN -> "Z";
-            case STRING -> "Ljava/lang/String;";
-            case PROCEDURE -> null;
-        };
-    }
 
 }
