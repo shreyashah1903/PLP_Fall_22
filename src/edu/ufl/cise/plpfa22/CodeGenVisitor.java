@@ -360,19 +360,18 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitExpressionIdent(ExpressionIdent expressionIdent, Object arg) throws PLPException {
-		System.out.println("VisitExpIdent");
+		System.out.println("VisitExpIdent:"+expressionIdent.getDec().getType());
 		MethodVisitor methodVisitor = (MethodVisitor)arg;
+		methodVisitor.visitVarInsn(ALOAD, 0);
+		String name;
 		if (expressionIdent.getDec() instanceof ConstDec) {
-			methodVisitor.visitVarInsn(ALOAD, 0);
-//			methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, String.valueOf(((ConstDec) expressionIdent.getDec()).ident.getText()), convertTypeToByteType(expressionIdent.getDec().getType()));
-//			methodVisitor.visitInsn(SWAP);
+			name = String.valueOf(((ConstDec) expressionIdent.getDec()).ident.getText());
 		}
 		else {
-			methodVisitor.visitVarInsn(ALOAD, 0);
-			String name = String.valueOf(((VarDec) expressionIdent.getDec()).ident.getText());
+			name = String.valueOf(((VarDec) expressionIdent.getDec()).ident.getText());
 			System.out.println("ExpressionIdent Name:"+name);
-			methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, convertToByteType(expressionIdent.getDec().getType()));
 		}
+		methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, convertToByteType(expressionIdent.getDec().getType()));
 		return null;
 	}
 
@@ -404,8 +403,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitConstDec(ConstDec constDec, Object arg) throws PLPException {
-//		MethodVisitor mv = (MethodVisitor)arg;
-//		mv.visitLdcInsn(constDec.getFirstToken().get());
+		Type type = constDec.getType();
+		System.out.println("Constdec type"+type);
+		FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(constDec.ident.getText()), convertToByteType(type), null, null);
+		fieldVisitor.visitEnd();
 		return null;
 	}
 
