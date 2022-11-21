@@ -37,8 +37,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     @Override
     public Object visitBlock(Block block, Object arg) throws PLPException {
-        MethodVisitor methodVisitor = (MethodVisitor) arg;
-
+        ClassWriter classWriter = (ClassWriter) arg;
 
         for (ConstDec constDec : block.constDecs) {
             constDec.visit(this, arg);
@@ -50,14 +49,13 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
             procDec.visit(this, arg);
         }
 
+        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "run", "()V", null, null);
+        methodVisitor.visitCode();
+
         //add instructions from statement to method
         block.statement.visit(this, methodVisitor);
 
         methodVisitor.visitInsn(RETURN);
-
-        //add label after last instruction
-        Label funcEnd = new Label();
-        methodVisitor.visitLabel(funcEnd);
 
         methodVisitor.visitMaxs(0, 0);
         methodVisitor.visitEnd();
@@ -76,18 +74,13 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         // Added a runnable interface
         classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, fullyQualifiedClassName, null, "java/lang/Object", new String[]{"java/lang/Runnable"});
 
-        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-        methodVisitor.visitCode();
+        //TODO Invoke a simple ASTVisitor to visit all procedure declarations and annotate them with their JVM names
 
-        visitInitBlock(methodVisitor);
+        visitInitBlock(classWriter);
 
-        methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "run", "()V", null, null);
-        methodVisitor.visitCode();
+        program.block.visit(this, classWriter);
 
-        //visit the block, passing it the methodVisitor
-        program.block.visit(this, methodVisitor);
-
-        visitMainBlock(methodVisitor);
+        visitMainBlock();
 
         //finish up the class
         classWriter.visitEnd();
@@ -100,7 +93,9 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 //		return bytes;
     }
 
-    private static void visitInitBlock(MethodVisitor methodVisitor) {
+    private static void visitInitBlock(ClassWriter classWriter) {
+        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        methodVisitor.visitCode();
         Label label0 = new Label();
         methodVisitor.visitLabel(label0);
         methodVisitor.visitVarInsn(ALOAD, 0);
@@ -117,8 +112,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         methodVisitor.visitEnd();
     }
 
-    private void visitMainBlock(MethodVisitor methodVisitor) {
-        methodVisitor = classWriter.visitMethod(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
+    private void visitMainBlock() {
+        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
         methodVisitor.visitCode();
 
         Label label3 = new Label();
