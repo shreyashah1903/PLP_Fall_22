@@ -3,10 +3,7 @@ package edu.ufl.cise.plpfa22;
 import edu.ufl.cise.plpfa22.IToken.Kind;
 import edu.ufl.cise.plpfa22.ast.*;
 import edu.ufl.cise.plpfa22.ast.Types.Type;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +23,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	private static final String BOOLEAN_NOT_CLASS = "edu/ufl/cise/plpfa22/BooleanNotOp";
 	private static final String CLASS_NAME = "edu/ufl/cise/plpfa22/prog";
+	private static final String INSTANCE_NAME = "Ledu/ufl/cise/plpfa22/prog;";
 
 	
 	public CodeGenVisitor(String className, String packageName, String sourceFileName) {
@@ -39,20 +37,28 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitBlock(Block block, Object arg) throws PLPException {
-		MethodVisitor methodVisitor = (MethodVisitor)arg;
-		methodVisitor.visitCode();
+		MethodVisitor methodVisitor = (MethodVisitor) arg;
+
+
 		for (ConstDec constDec : block.constDecs) {
-			constDec.visit(this, null);
+			constDec.visit(this, arg);
 		}
 		for (VarDec varDec : block.varDecs) {
-			varDec.visit(this, methodVisitor);
+			varDec.visit(this, arg);
 		}
 		for (ProcDec procDec: block.procedureDecs) {
-			procDec.visit(this, null);
+			procDec.visit(this, arg);
 		}
+
 		//add instructions from statement to method
-		block.statement.visit(this, arg);
+		block.statement.visit(this, methodVisitor);
+
 		methodVisitor.visitInsn(RETURN);
+
+		//add label after last instruction
+		Label funcEnd = new Label();
+		methodVisitor.visitLabel(funcEnd);
+
 		methodVisitor.visitMaxs(0,0);
 		methodVisitor.visitEnd();
 		return null;
@@ -67,19 +73,71 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		// instead of ClassWriter.COMPUTE_FRAMES.  The result will not be a valid classfile,
 		// but you will be able to print it so you can see the instructions.  After fixing,
 		// restore ClassWriter.COMPUTE_FRAMES
-		classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, fullyQualifiedClassName, null, "java/lang/Object", null);
+		// Added a runnable interface
+		classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, fullyQualifiedClassName, null, "java/lang/Object", new String[] { "java/lang/Runnable" });
 
-		//get a method visitor for the main method.		
-		MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
+		MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+		methodVisitor.visitCode();
+
+		visitInitBlock(methodVisitor);
+
+		methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "run", "()V", null, null);
+		methodVisitor.visitCode();
+
 		//visit the block, passing it the methodVisitor
 		program.block.visit(this, methodVisitor);
+
+		visitMainBlock(methodVisitor);
+
 		//finish up the class
         classWriter.visitEnd();
+
         //return the bytes making up the classfile
 		byte[] bytes = classWriter.toByteArray();
 		List<CodeGenUtils.GenClass> list = new ArrayList<>();
 		list.add(new CodeGenUtils.GenClass(CLASS_NAME, bytes));
 		return list;
+//		return bytes;
+	}
+
+	private static void visitInitBlock(MethodVisitor methodVisitor) {
+		Label label0 = new Label();
+		methodVisitor.visitLabel(label0);
+		methodVisitor.visitVarInsn(ALOAD, 0);
+		methodVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+
+		Label label1 = new Label();
+		methodVisitor.visitLabel(label1);
+		methodVisitor.visitInsn(RETURN);
+
+		Label label2 = new Label();
+		methodVisitor.visitLabel(label2);
+		methodVisitor.visitLocalVariable("this", INSTANCE_NAME, null, label0, label2, 0);
+		methodVisitor.visitMaxs(1, 1);
+		methodVisitor.visitEnd();
+	}
+
+	private void visitMainBlock(MethodVisitor methodVisitor) {
+		methodVisitor = classWriter.visitMethod(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
+		methodVisitor.visitCode();
+
+		Label label3 = new Label();
+		methodVisitor.visitLabel(label3);
+		methodVisitor.visitTypeInsn(NEW, CLASS_NAME);
+		methodVisitor.visitInsn(DUP);
+		methodVisitor.visitMethodInsn(INVOKESPECIAL, CLASS_NAME, "<init>", "()V", false);
+		methodVisitor.visitMethodInsn(INVOKEVIRTUAL, CLASS_NAME, "run", "()V", false);
+
+
+		Label label4 = new Label();
+		methodVisitor.visitLabel(label4);
+		methodVisitor.visitInsn(RETURN);
+
+		Label label5 = new Label();
+		methodVisitor.visitLabel(label5);
+		methodVisitor.visitLocalVariable("args", "[Ljava/lang/String;", null, label3, label5, 0);
+		methodVisitor.visitMaxs(2, 1);
+		methodVisitor.visitEnd();
 	}
 
 	@Override
@@ -92,13 +150,11 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitVarDec(VarDec varDec, Object arg) throws PLPException {
-//		Type type = varDec.getType();
-//		MethodVisitor methodVisitor = (MethodVisitor) arg;
-//
-//		if (type == Type.NUMBER) {
-//			methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, String.valueOf(varDec.ident.getText()), "I");
-//		}
+		Type type = varDec.getType();
 
+		System.out.println("Vardec type"+type);
+		FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(varDec.ident.getText()), convertToByteType(type), null, null);
+		fieldVisitor.visitEnd();
 		return null;
 	}
 
@@ -117,9 +173,11 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		MethodVisitor mv = (MethodVisitor)arg;
 		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
 		statementOutput.expression.visit(this, arg);
+
 		Type etype = statementOutput.expression.getType();
 		String JVMType = (etype.equals(Type.NUMBER) ? "I" : (etype.equals(Type.BOOLEAN) ? "Z" : "Ljava/lang/String;"));
 		String printlnSig = "(" + JVMType +")V";
+
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", printlnSig, false);
 		return null;
 	}
@@ -310,15 +368,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 //			methodVisitor.visitInsn(SWAP);
 		}
 		else {
-//			Label label0 = new Label();
-//			methodVisitor.visitLabel(label0);
 			methodVisitor.visitVarInsn(ALOAD, 0);
-
 			String name = String.valueOf(((VarDec) expressionIdent.getDec()).ident.getText());
 			System.out.println("ExpressionIdent Name:"+name);
-
-			methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, convertTypeToByteType(expressionIdent.getDec().getType()));
-//			methodVisitor.visitInsn(SWAP);
+			methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, convertToByteType(expressionIdent.getDec().getType()));
 		}
 		return null;
 	}
@@ -365,17 +418,18 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	public Object visitIdent(Ident ident, Object arg) throws PLPException {
 		System.out.println("visitIdent:"+ Arrays.toString(ident.getText()));
 		MethodVisitor methodVisitor = (MethodVisitor)arg;
+
 		methodVisitor.visitVarInsn(ALOAD, 0);
+		methodVisitor.visitInsn(SWAP);
+
 		String name = String.valueOf(((VarDec) ident.getDec()).ident.getText());
 		System.out.println("Ident Name:"+name);
 
-		methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, name, convertTypeToByteType(ident.getDec().getType()));
-//        methodVisitor.visitInsn(SWAP);
-//		methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, ident.getDec().toString(), convertTypeToByteType(ident.getDec().getType()));
+		methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, name, convertToByteType(ident.getDec().getType()));
 		return null;
 	}
 
-	private String convertTypeToByteType(Type type) {
+	private String convertToByteType(Type type) {
 		return switch (type) {
 			case NUMBER -> "I";
 			case BOOLEAN -> "Z";
