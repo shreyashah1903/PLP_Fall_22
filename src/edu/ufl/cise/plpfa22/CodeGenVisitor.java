@@ -25,6 +25,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     private static final String CLASS_NAME = "edu/ufl/cise/plpfa22/prog";
     private static final String INSTANCE_NAME = "Ledu/ufl/cise/plpfa22/prog;";
 
+    private String currentClassName = CLASS_NAME;
+
     private List<CodeGenUtils.GenClass> bytecodeList = new ArrayList<>();
 
     public CodeGenVisitor(String className, String packageName, String sourceFileName) {
@@ -405,8 +407,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         int identNestLevel = expressionIdent.getNest();
         int decNestLevel = expressionIdent.getDec().getNest();
 
-        if (identNestLevel != decNestLevel) {
-            methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME + "$p", "this$"+decNestLevel, INSTANCE_NAME);
+        if (identNestLevel > decNestLevel) {
+            methodVisitor.visitFieldInsn(GETFIELD, currentClassName, "this$"+decNestLevel, INSTANCE_NAME);
         }
         methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, expressionIdent.getDec().getJvmType());
         return null;
@@ -444,6 +446,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         fieldVisitor.visitEnd();
 
         String className = procDec.getJvmType();
+        currentClassName = className;
         visitProcedureInitBlock(classWriter, classDesc, fieldName, className, procDec.getClassDec());
         procDec.block.visit(this, classWriter);
 
@@ -517,9 +520,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 //        }
 
         if (identNestLevel > decNestLevel) {
-            methodVisitor.visitFieldInsn(GETFIELD, ident.getDec().getClassName(), "this$" + decNestLevel, INSTANCE_NAME);
+            methodVisitor.visitFieldInsn(GETFIELD, currentClassName, "this$" + decNestLevel, INSTANCE_NAME);
         }
-
 
         methodVisitor.visitInsn(SWAP);
 
