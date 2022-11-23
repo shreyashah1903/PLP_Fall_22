@@ -28,6 +28,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     private String currentClassName = CLASS_NAME;
 
     private List<CodeGenUtils.GenClass> bytecodeList = new ArrayList<>();
+    private List<String> classNameList = new ArrayList<>();
 
     public CodeGenVisitor(String className, String packageName, String sourceFileName) {
         super();
@@ -82,7 +83,9 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
         visitInitBlock(classWriter);
 
+        classNameList.add(CLASS_NAME);
         program.block.visit(this, classWriter);
+        classNameList.remove(classNameList.size() - 1);
 
         visitMainBlock();
 
@@ -450,7 +453,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         String className = procDec.getJvmType();
         currentClassName = className;
         visitProcedureInitBlock(classWriter, classDesc, fieldName, className, procDec.getClassDec());
+
+        classNameList.add(procDec.getJvmType());
         procDec.block.visit(this, classWriter);
+        classNameList.remove(classNameList.size() - 1);
 
         classWriter.visitEnd();
         byte[] bytes = classWriter.toByteArray();
@@ -515,21 +521,18 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         int decNestLevel = ident.getDec().getNest();
 
         //TODO Replace hardcoded procedure name
-//        String className;
-//        while (identNestLevel > decNestLevel) {
-////            className = ;
-//            identNestLevel--;
-//        }
-
-        if (identNestLevel > decNestLevel) {
-            methodVisitor.visitFieldInsn(GETFIELD, currentClassName, "this$" + decNestLevel, INSTANCE_NAME);
+        String className;
+        while (identNestLevel > decNestLevel) {
+            methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), "this$" + (identNestLevel - 1), INSTANCE_NAME);
+            identNestLevel--;
         }
+
 
         methodVisitor.visitInsn(SWAP);
 
         System.out.println("Ident Name:" + name);
 
-        methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, name, jvmType);
+        methodVisitor.visitFieldInsn(PUTFIELD, classNameList.get(decNestLevel), name, jvmType);
         return null;
     }
 
