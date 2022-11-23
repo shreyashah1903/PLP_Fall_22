@@ -78,33 +78,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, fullyQualifiedClassName, null, "java/lang/Object", new String[]{"java/lang/Runnable"});
 
         //Invoke a simple ASTVisitor to visit all procedure declarations and annotate them with their JVM names
-        for (ProcDec procDec : program.block.procedureDecs) {
-            System.out.println("ProcDec");
-            String ident = String.valueOf(procDec.ident.getText());
-            String className = CLASS_NAME + "$" + ident;
-            String classDec = "Ledu/ufl/cise/plpfa22/prog" + "$" + ident + ";";
-
-            procDec.setJvmType(className);
-            procDec.setClassName(className);
-            procDec.setClassDec(classDec);
-
-            Block block = procDec.block;
-            for (ConstDec constDec : block.constDecs) {
-                constDec.setClassDec(classDec);
-                constDec.setClassName(className);
-            }
-            for (VarDec varDec : block.varDecs) {
-                varDec.setClassDec(classDec);
-                varDec.setClassName(className);
-            }
-            for (ProcDec procDec1 : block.procedureDecs) {
-                procDec1.setClassDec(classDec);
-                procDec1.setClassName(className);
-            }
-
-
-//            procDec.visit(this, className);
-        }
+        annotateProcedureDec(program.block, CLASS_NAME, "Ledu/ufl/cise/plpfa22/prog");
 
         visitInitBlock(classWriter);
 
@@ -121,6 +95,34 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         return bytecodeList;
 //		return bytes;
     }
+
+    private static void annotateProcedureDec(Block block, String className, String classDesc) {
+        for (ProcDec procDec : block.procedureDecs) {
+            System.out.println("ProcDec");
+            String ident = String.valueOf(procDec.ident.getText());
+            className = className + "$" + ident;
+            classDesc = classDesc + "$" + ident + ";";
+
+            procDec.setJvmType(className);
+            procDec.setClassName(className);
+            procDec.setClassDec(classDesc);
+
+            Block block1 = procDec.block;
+            for (ConstDec constDec : block1.constDecs) {
+                constDec.setClassDec(classDesc);
+                constDec.setClassName(className);
+            }
+            for (VarDec varDec : block1.varDecs) {
+                varDec.setClassDec(classDesc);
+                varDec.setClassName(className);
+            }
+
+            if (!block1.procedureDecs.isEmpty()) {
+                annotateProcedureDec(block1, className, classDesc.substring(0, classDesc.length() - 1));
+            }
+        }
+    }
+
     private static void visitInitBlock(ClassWriter classWriter, String... parameter) {
         String descriptor = parameter.length == 0 ? "()V" : "(" + parameter[0] + ")V";
         MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", descriptor, null, null);
