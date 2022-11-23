@@ -25,6 +25,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     private static final String CLASS_NAME = "edu/ufl/cise/plpfa22/prog";
     private static final String INSTANCE_NAME = "Ledu/ufl/cise/plpfa22/prog;";
 
+    private List<CodeGenUtils.GenClass> bytecodeList = new ArrayList<>();
 
     public CodeGenVisitor(String className, String packageName, String sourceFileName) {
         super();
@@ -46,7 +47,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
             varDec.visit(this, arg);
         }
         for (ProcDec procDec : block.procedureDecs) {
-            procDec.visit(this, arg);
+            procDec.visit(this, CLASS_NAME);
         }
 
         MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "run", "()V", null, null);
@@ -74,7 +75,11 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         // Added a runnable interface
         classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, fullyQualifiedClassName, null, "java/lang/Object", new String[]{"java/lang/Runnable"});
 
-        //TODO Invoke a simple ASTVisitor to visit all procedure declarations and annotate them with their JVM names
+        //Invoke a simple ASTVisitor to visit all procedure declarations and annotate them with their JVM names
+        for (ProcDec procDec : program.block.procedureDecs) {
+            System.out.println("ProcDec");
+            procDec.setJvmType(CLASS_NAME + "$" + String.valueOf(procDec.ident.getText()));
+        }
 
         visitInitBlock(classWriter);
 
@@ -87,14 +92,13 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
         //return the bytes making up the classfile
         byte[] bytes = classWriter.toByteArray();
-        List<CodeGenUtils.GenClass> list = new ArrayList<>();
-        list.add(new CodeGenUtils.GenClass(CLASS_NAME, bytes));
-        return list;
+        bytecodeList.add(0, new CodeGenUtils.GenClass(CLASS_NAME, bytes));
+        return bytecodeList;
 //		return bytes;
     }
-
-    private static void visitInitBlock(ClassWriter classWriter) {
-        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+    private static void visitInitBlock(ClassWriter classWriter, String... parameter) {
+        String descriptor = parameter.length == 0 ? "()V" : "(" + parameter[0] + ")V";
+        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", descriptor, null, null);
         methodVisitor.visitCode();
         Label label0 = new Label();
         methodVisitor.visitLabel(label0);
@@ -122,7 +126,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         methodVisitor.visitInsn(DUP);
         methodVisitor.visitMethodInsn(INVOKESPECIAL, CLASS_NAME, "<init>", "()V", false);
         methodVisitor.visitMethodInsn(INVOKEVIRTUAL, CLASS_NAME, "run", "()V", false);
-
 
         Label label4 = new Label();
         methodVisitor.visitLabel(label4);
@@ -156,7 +159,15 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
-        throw new UnsupportedOperationException();
+        MethodVisitor methodVisitor = (MethodVisitor)arg;
+        String className = CLASS_NAME + "$" + String.valueOf(statementCall.ident.getText());
+        methodVisitor.visitTypeInsn(NEW, className);
+        methodVisitor.visitInsn(DUP);
+        methodVisitor.visitVarInsn(ALOAD, 0);
+        methodVisitor.visitMethodInsn(INVOKESPECIAL, className, "<init>", "(" + INSTANCE_NAME + ")V", false);
+        methodVisitor.visitMethodInsn(INVOKEVIRTUAL, className, "run", "()V", false);
+
+        return null;
     }
 
     @Override
@@ -393,7 +404,20 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     @Override
     public Object visitProcedure(ProcDec procDec, Object arg) throws PLPException {
-        throw new UnsupportedOperationException();
+        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES); //TODO Replace with COMPUTE_FRAMES
+        classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, procDec.getJvmType(), null, "java/lang/Object", new String[]{"java/lang/Runnable"});
+
+        FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, "this$"+procDec.getNest(),
+                INSTANCE_NAME, null, null);
+        fieldVisitor.visitEnd();
+
+        visitInitBlock(classWriter, classDesc);
+        procDec.block.visit(this, classWriter);
+
+        classWriter.visitEnd();
+        byte[] bytes = classWriter.toByteArray();
+        bytecodeList.add(new CodeGenUtils.GenClass(procDec.getJvmType(), bytes));
+        return null;
     }
 
     @Override

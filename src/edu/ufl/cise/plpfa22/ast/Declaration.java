@@ -28,6 +28,7 @@ public abstract class Declaration extends ASTNode {
 
 	public void setJvmType(String type) {
 		this.jvmType = type;
+		System.out.println("Declaration Setjvmtype:"+type);
 	}
 
 	public String getJvmType() {
