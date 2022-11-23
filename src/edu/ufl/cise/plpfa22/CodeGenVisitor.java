@@ -78,7 +78,30 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         //Invoke a simple ASTVisitor to visit all procedure declarations and annotate them with their JVM names
         for (ProcDec procDec : program.block.procedureDecs) {
             System.out.println("ProcDec");
-            procDec.setJvmType(CLASS_NAME + "$" + String.valueOf(procDec.ident.getText()));
+            String ident = String.valueOf(procDec.ident.getText());
+            String className = CLASS_NAME + "$" + ident;
+            String classDec = "Ledu/ufl/cise/plpfa22/prog" + "$" + ident + ";";
+
+            procDec.setJvmType(className);
+            procDec.setClassName(className);
+            procDec.setClassDec(classDec);
+
+            Block block = procDec.block;
+            for (ConstDec constDec : block.constDecs) {
+                constDec.setClassDec(classDec);
+                constDec.setClassName(className);
+            }
+            for (VarDec varDec : block.varDecs) {
+                varDec.setClassDec(classDec);
+                varDec.setClassName(className);
+            }
+            for (ProcDec procDec1 : block.procedureDecs) {
+                procDec1.setClassDec(classDec);
+                procDec1.setClassName(className);
+            }
+
+
+//            procDec.visit(this, className);
         }
 
         visitInitBlock(classWriter);
@@ -100,8 +123,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         String descriptor = parameter.length == 0 ? "()V" : "(" + parameter[0] + ")V";
         MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", descriptor, null, null);
         methodVisitor.visitCode();
+
         Label label0 = new Label();
         methodVisitor.visitLabel(label0);
+
         methodVisitor.visitVarInsn(ALOAD, 0);
         methodVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
 
@@ -377,6 +402,12 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
             name = String.valueOf(((VarDec) expressionIdent.getDec()).ident.getText());
             System.out.println("ExpressionIdent Name:" + name);
         }
+        int identNestLevel = expressionIdent.getNest();
+        int decNestLevel = expressionIdent.getDec().getNest();
+
+        if (identNestLevel != decNestLevel) {
+            methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME + "$p", "this$"+decNestLevel, INSTANCE_NAME);
+        }
         methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, expressionIdent.getDec().getJvmType());
         return null;
     }
@@ -407,17 +438,46 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES); //TODO Replace with COMPUTE_FRAMES
         classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, procDec.getJvmType(), null, "java/lang/Object", new String[]{"java/lang/Runnable"});
 
-        FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, "this$"+procDec.getNest(),
+        String fieldName = "this$" + procDec.getNest();
+        FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, fieldName,
                 INSTANCE_NAME, null, null);
         fieldVisitor.visitEnd();
 
-        visitInitBlock(classWriter, classDesc);
+        String className = procDec.getJvmType();
+        visitProcedureInitBlock(classWriter, classDesc, fieldName, className, procDec.getClassDec());
         procDec.block.visit(this, classWriter);
 
         classWriter.visitEnd();
         byte[] bytes = classWriter.toByteArray();
         bytecodeList.add(new CodeGenUtils.GenClass(procDec.getJvmType(), bytes));
         return null;
+    }
+
+    private static void visitProcedureInitBlock(ClassWriter classWriter, String parentClassDesc, String fieldName, String fullyQualifiedClassName,
+                                                String classDesc) {
+        String descriptor = "(" + parentClassDesc + ")V";
+        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", descriptor, null, null);
+        methodVisitor.visitCode();
+
+        Label label0 = new Label();
+        methodVisitor.visitLabel(label0);
+        methodVisitor.visitVarInsn(ALOAD, 0);
+        methodVisitor.visitVarInsn(ALOAD, 1);
+        methodVisitor.visitFieldInsn(PUTFIELD, fullyQualifiedClassName,
+                fieldName, parentClassDesc);
+
+
+        methodVisitor.visitVarInsn(ALOAD, 0);
+        methodVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+
+        methodVisitor.visitInsn(RETURN);
+
+        Label label2 = new Label();
+        methodVisitor.visitLabel(label2);
+
+        methodVisitor.visitLocalVariable("this", classDesc, null, label0, label2, 0);
+        methodVisitor.visitMaxs(1, 1);
+        methodVisitor.visitEnd();
     }
 
     @Override
@@ -437,16 +497,35 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLPException {
-        System.out.println("visitIdent:" + Arrays.toString(ident.getText()));
+
+        System.out.println("visitIdent:" + Arrays.toString(ident.getText()) + " nest:"+ident.getNest() + "dec nest:"+ident.getDec().getNest());
         MethodVisitor methodVisitor = (MethodVisitor) arg;
 
+        String name = String.valueOf(((VarDec) ident.getDec()).ident.getText());
+        String jvmType = ident.getDec().getJvmType();
+
         methodVisitor.visitVarInsn(ALOAD, 0);
+
+        int identNestLevel = ident.getNest();
+        int decNestLevel = ident.getDec().getNest();
+
+        //TODO Replace hardcoded procedure name
+//        String className;
+//        while (identNestLevel > decNestLevel) {
+////            className = ;
+//            identNestLevel--;
+//        }
+
+        if (identNestLevel > decNestLevel) {
+            methodVisitor.visitFieldInsn(GETFIELD, ident.getDec().getClassName(), "this$" + decNestLevel, INSTANCE_NAME);
+        }
+
+
         methodVisitor.visitInsn(SWAP);
 
-        String name = String.valueOf(((VarDec) ident.getDec()).ident.getText());
         System.out.println("Ident Name:" + name);
 
-        methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, name, ident.getDec().getJvmType());
+        methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, name, jvmType);
         return null;
     }
 

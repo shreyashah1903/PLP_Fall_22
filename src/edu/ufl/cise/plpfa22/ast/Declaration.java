@@ -5,6 +5,7 @@
 package edu.ufl.cise.plpfa22.ast;
 
 import edu.ufl.cise.plpfa22.IToken;
+import edu.ufl.cise.plpfa22.LogHelper;
 import edu.ufl.cise.plpfa22.ast.Types.Type;
 
 public abstract class Declaration extends ASTNode {
@@ -12,6 +13,27 @@ public abstract class Declaration extends ASTNode {
 	Type type;
 	private int nest;
 	String jvmType;
+
+	String classDec;
+	String className;
+
+	public String getClassDec() {
+		return classDec;
+	}
+
+	public void setClassDec(String classDec) {
+		LogHelper.printOutput(classDec);
+		this.classDec = classDec;
+	}
+
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		LogHelper.printOutput(className);
+		this.className = className;
+	}
 
 	public Declaration(IToken firstToken) {
 		super(firstToken);
@@ -28,7 +50,7 @@ public abstract class Declaration extends ASTNode {
 
 	public void setJvmType(String type) {
 		this.jvmType = type;
-		System.out.println("Declaration Setjvmtype:"+type);
+		System.out.println("Declaration Setjvmtype:"+type + " classType:"+this);
 	}
 
 	public String getJvmType() {
