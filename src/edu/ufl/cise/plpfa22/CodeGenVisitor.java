@@ -174,7 +174,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws PLPException {
         statementAssign.expression.visit(this, arg);
         statementAssign.ident.visit(this, arg);
-
         return null;
     }
 
@@ -183,9 +182,12 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         Type type = varDec.getType();
 
         System.out.println("Vardec type" + type);
-        FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(varDec.ident.getText()),
-                varDec.getJvmType(), null, null);
-        fieldVisitor.visitEnd();
+        if(type != null)  {
+            FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(varDec.ident.getText()),
+                    varDec.getJvmType(), null, null);
+            fieldVisitor.visitEnd();
+        }
+
         return null;
     }
 
@@ -412,10 +414,12 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         int identNestLevel = expressionIdent.getNest();
         int decNestLevel = expressionIdent.getDec().getNest();
 
-        if (identNestLevel > decNestLevel) {
-            methodVisitor.visitFieldInsn(GETFIELD, currentClassName, "this$"+decNestLevel, INSTANCE_NAME);
+        while (identNestLevel > decNestLevel) {
+            methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), "this$" + (identNestLevel - 1), INSTANCE_NAME);
+            identNestLevel--;
         }
-        methodVisitor.visitFieldInsn(GETFIELD, CLASS_NAME, name, expressionIdent.getDec().getJvmType());
+
+        methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), name, expressionIdent.getDec().getJvmType());
         return null;
     }
 
@@ -520,19 +524,17 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         int identNestLevel = ident.getNest();
         int decNestLevel = ident.getDec().getNest();
 
-        //TODO Replace hardcoded procedure name
-        String className;
+
         while (identNestLevel > decNestLevel) {
             methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), "this$" + (identNestLevel - 1), INSTANCE_NAME);
             identNestLevel--;
         }
 
-
         methodVisitor.visitInsn(SWAP);
 
         System.out.println("Ident Name:" + name);
 
-        methodVisitor.visitFieldInsn(PUTFIELD, classNameList.get(decNestLevel), name, jvmType);
+        methodVisitor.visitFieldInsn(PUTFIELD, classNameList.get(identNestLevel), name, jvmType);
         return null;
     }
 
