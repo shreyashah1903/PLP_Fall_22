@@ -120,8 +120,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
                 varDec.setClassName(className);
             }
 
+            // Get rid of ; before adding a new ident
+            classDesc = classDesc.substring(0, classDesc.length() - 1);
             if (!block1.procedureDecs.isEmpty()) {
-                annotateProcedureDec(block1, className, classDesc.substring(0, classDesc.length() - 1));
+                annotateProcedureDec(block1, className, classDesc);
             }
         }
     }
