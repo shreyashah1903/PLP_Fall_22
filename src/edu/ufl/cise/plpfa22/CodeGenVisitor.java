@@ -451,14 +451,16 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES); //TODO Replace with COMPUTE_FRAMES
         classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, procDec.getJvmType(), null, "java/lang/Object", new String[]{"java/lang/Runnable"});
 
+        String parentDesc = "L" + classNameList.get(classNameList.size() - 1) + ';';
         String fieldName = "this$" + procDec.getNest();
         FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, fieldName,
-                INSTANCE_NAME, null, null);
+                parentDesc, null, null);
         fieldVisitor.visitEnd();
 
         String className = procDec.getJvmType();
         currentClassName = className;
-        visitProcedureInitBlock(classWriter, classDesc, fieldName, className, procDec.getClassDec());
+
+        visitProcedureInitBlock(classWriter, parentDesc, fieldName, className, procDec.getClassDec());
 
         classNameList.add(procDec.getJvmType());
         procDec.block.visit(this, classWriter);
