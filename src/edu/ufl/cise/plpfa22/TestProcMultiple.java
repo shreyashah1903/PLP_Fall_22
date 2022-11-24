@@ -5,7 +5,7 @@ public class TestProcMultiple implements Runnable {
     String b;
     boolean c;
 
-    public TestProc() {
+    public TestProcMultiple() {
         super();
     }
 
@@ -23,7 +23,7 @@ public class TestProcMultiple implements Runnable {
     }
 
     public static void main(String[] args) {
-        new TestProc().run();
+        new TestProcMultiple().run();
     }
 
     @Override
