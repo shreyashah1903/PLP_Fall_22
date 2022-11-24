@@ -12,7 +12,6 @@ import java.util.List;
 public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     public static final String JAVA_LANG_STRING = "java/lang/String";
-    public static final String JAVA_LANG_STRING_DESC = "(Ljava/lang/String;)Z";
     final String packageName;
     final String className;
     final String sourceFileName;
@@ -25,10 +24,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     private static final String CLASS_NAME = "edu/ufl/cise/plpfa22/prog";
     private static final String INSTANCE_NAME = "Ledu/ufl/cise/plpfa22/prog;";
 
-    private String currentClassName = CLASS_NAME;
-
-    private List<CodeGenUtils.GenClass> bytecodeList = new ArrayList<>();
-    private List<String> classNameList = new ArrayList<>();
+    private final List<CodeGenUtils.GenClass> bytecodeList = new ArrayList<>();
+    private final List<String> classNameList = new ArrayList<>();
 
     public CodeGenVisitor(String className, String packageName, String sourceFileName) {
         super();
@@ -103,7 +100,14 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         for (ProcDec procDec : block.procedureDecs) {
             System.out.println("ProcDec");
             String ident = String.valueOf(procDec.ident.getText());
+
+            procDec.setParentClassName(className);
             className = className + "$" + ident;
+
+            // Get rid of ; before adding a new ident
+            if (classDesc.endsWith(";")) {
+                classDesc = classDesc.substring(0, classDesc.length() - 1);
+            }
             classDesc = classDesc + "$" + ident + ";";
 
             procDec.setJvmType(className);
@@ -120,10 +124,15 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
                 varDec.setClassName(className);
             }
 
-            // Get rid of ; before adding a new ident
-            classDesc = classDesc.substring(0, classDesc.length() - 1);
             if (!block1.procedureDecs.isEmpty()) {
-                annotateProcedureDec(block1, className, classDesc);
+                annotateProcedureDec(block1, className, classDesc.substring(0, classDesc.length() - 1));
+            }
+            else {
+                String[] classes = className.split("\\$");
+                if (classes.length > 1) {
+                    className = classes[0];
+                    classDesc = classDesc.split("\\$")[0];
+                }
             }
         }
     }
@@ -196,11 +205,14 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
         MethodVisitor methodVisitor = (MethodVisitor)arg;
-        String className = classNameList.get(classNameList.size() - 1) + "$" + String.valueOf(statementCall.ident.getText());
+        String innermostClass = statementCall.ident.getDec().getParentClassName();
+
+        String className = statementCall.ident.getDec().getClassName();
+        System.out.println("Call-- Classname:"+className + " proc init param:"+innermostClass);
         methodVisitor.visitTypeInsn(NEW, className);
         methodVisitor.visitInsn(DUP);
         methodVisitor.visitVarInsn(ALOAD, 0);
-        methodVisitor.visitMethodInsn(INVOKESPECIAL, className, "<init>", "(L" + classNameList.get(classNameList.size() - 1) + ";)V", false);
+        methodVisitor.visitMethodInsn(INVOKESPECIAL, className, "<init>", "(L" + innermostClass + ";)V", false);
         methodVisitor.visitMethodInsn(INVOKEVIRTUAL, className, "run", "()V", false);
 
         return null;
@@ -458,7 +470,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         fieldVisitor.visitEnd();
 
         String className = procDec.getJvmType();
-        currentClassName = className;
 
         visitProcedureInitBlock(classWriter, parentDesc, fieldName, className, procDec.getClassDec());
 

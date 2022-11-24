@@ -17,6 +17,8 @@ public abstract class Declaration extends ASTNode {
 	String classDec;
 	String className;
 
+	String parentClassName;
+
 	public String getClassDec() {
 		return classDec;
 	}
@@ -31,8 +33,18 @@ public abstract class Declaration extends ASTNode {
 	}
 
 	public void setClassName(String className) {
+		LogHelper.printOutput("Proc class name:" + className);
 		LogHelper.printOutput(className);
 		this.className = className;
+	}
+
+	public String getParentClassName() {
+		return parentClassName;
+	}
+
+	public void setParentClassName(String className) {
+		LogHelper.printOutput("Proc Parent class name:" + className);
+		this.parentClassName = className;
 	}
 
 	public Declaration(IToken firstToken) {
