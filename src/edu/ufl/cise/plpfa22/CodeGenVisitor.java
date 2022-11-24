@@ -196,11 +196,11 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
         MethodVisitor methodVisitor = (MethodVisitor)arg;
-        String className = CLASS_NAME + "$" + String.valueOf(statementCall.ident.getText());
+        String className = classNameList.get(classNameList.size() - 1) + "$" + String.valueOf(statementCall.ident.getText());
         methodVisitor.visitTypeInsn(NEW, className);
         methodVisitor.visitInsn(DUP);
         methodVisitor.visitVarInsn(ALOAD, 0);
-        methodVisitor.visitMethodInsn(INVOKESPECIAL, className, "<init>", "(" + INSTANCE_NAME + ")V", false);
+        methodVisitor.visitMethodInsn(INVOKESPECIAL, className, "<init>", "(L" + classNameList.get(classNameList.size() - 1) + ";)V", false);
         methodVisitor.visitMethodInsn(INVOKEVIRTUAL, className, "run", "()V", false);
 
         return null;
@@ -417,7 +417,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         int decNestLevel = expressionIdent.getDec().getNest();
 
         while (identNestLevel > decNestLevel) {
-            methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), "this$" + (identNestLevel - 1), INSTANCE_NAME);
+            methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), "this$" + (identNestLevel - 1), "L" + classNameList.get(identNestLevel - 1) + ";");
             identNestLevel--;
         }
 
@@ -530,7 +530,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 
         while (identNestLevel > decNestLevel) {
-            methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), "this$" + (identNestLevel - 1), INSTANCE_NAME);
+            methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), "this$" + (identNestLevel - 1), "L" + classNameList.get(identNestLevel - 1) + ";");
             identNestLevel--;
         }
 
