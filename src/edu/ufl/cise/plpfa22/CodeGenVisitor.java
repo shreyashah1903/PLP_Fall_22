@@ -104,11 +104,9 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
             procDec.setParentClassName(className);
             className = className + "$" + ident;
 
-            // Get rid of ; before adding a new ident
-            if (classDesc.endsWith(";")) {
-                classDesc = classDesc.substring(0, classDesc.length() - 1);
-            }
             classDesc = classDesc + "$" + ident + ";";
+
+            System.out.println("annotateProcedureDec ChildClass:"+className + " Parentclass:"+procDec.getParentClassName());
 
             procDec.setJvmType(className);
             procDec.setClassName(className);
@@ -127,12 +125,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
             if (!block1.procedureDecs.isEmpty()) {
                 annotateProcedureDec(block1, className, classDesc.substring(0, classDesc.length() - 1));
             }
-            else {
-                String[] classes = className.split("\\$");
-                if (classes.length > 1) {
-                    className = classes[0];
-                    classDesc = classDesc.split("\\$")[0];
-                }
+            String[] classes = className.split("\\$");
+            if (classes.length > 1) {
+                className = classes[0];
+                classDesc = classDesc.split("\\$")[0];
             }
         }
     }
@@ -205,15 +201,24 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     @Override
     public Object visitStatementCall(StatementCall statementCall, Object arg) throws PLPException {
         MethodVisitor methodVisitor = (MethodVisitor)arg;
-        String innermostClass = statementCall.ident.getDec().getParentClassName();
+        String parentClassName = statementCall.ident.getDec().getParentClassName();
 
-        String className = statementCall.ident.getDec().getClassName();
-        System.out.println("Call-- Classname:"+className + " proc init param:"+innermostClass);
-        methodVisitor.visitTypeInsn(NEW, className);
+        String newClassName = statementCall.ident.getDec().getClassName();
+        methodVisitor.visitTypeInsn(NEW, newClassName);
         methodVisitor.visitInsn(DUP);
         methodVisitor.visitVarInsn(ALOAD, 0);
-        methodVisitor.visitMethodInsn(INVOKESPECIAL, className, "<init>", "(L" + innermostClass + ";)V", false);
-        methodVisitor.visitMethodInsn(INVOKEVIRTUAL, className, "run", "()V", false);
+
+        if (classNameList.size() > 1) {
+            int identNestLevel = statementCall.ident.getNest();
+            // If parentClassName != className at last index, then Getfield to get the enclosing class
+            while (identNestLevel > 0 && !parentClassName.equals(classNameList.get(identNestLevel))) {
+                methodVisitor.visitFieldInsn(GETFIELD, classNameList.get(identNestLevel), "this$" + (identNestLevel - 1), "L" + classNameList.get(identNestLevel - 1) + ";");
+                identNestLevel--;
+            }
+        }
+        methodVisitor.visitMethodInsn(INVOKESPECIAL, newClassName, "<init>", "(L" + parentClassName + ";)V", false);
+
+        methodVisitor.visitMethodInsn(INVOKEVIRTUAL, newClassName, "run", "()V", false);
 
         return null;
     }
@@ -261,12 +266,16 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         MethodVisitor mv = (MethodVisitor) arg;
         Label label1 = new Label();
         mv.visitJumpInsn(GOTO, label1);
+
         Label label2 = new Label();
         mv.visitLabel(label2);
+
         statementWhile.statement.visit(this, arg);
         mv.visitLabel(label1);
         statementWhile.expression.visit(this, arg);
+
         mv.visitJumpInsn(IFNE, label2);
+
         return null;
     }
 
