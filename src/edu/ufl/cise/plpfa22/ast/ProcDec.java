@@ -27,7 +27,7 @@ public class ProcDec extends Declaration {
 
 	@Override
 	public String toString() {
-		return "ProcDec [" + (ident != null ? "ident=" + ident + ", " : "") + (block != null ? "block=" + block : "") + "]";
+		return "ProcDec " + this.ident.toString();
 	}
 	
 	
