@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 
 public class CodeGenTests {
@@ -29,9 +30,24 @@ public class CodeGenTests {
 		ast.visit(CompilerComponentFactory.getScopeVisitor(), null);
 		ast.visit(CompilerComponentFactory.getTypeInferenceVisitor(), null);
 		byte[] bytecode = (byte[]) ast.visit(CompilerComponentFactory.getCodeGenVisitor(className, packageName, ""), null);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		
 		show("----------------");
 		return bytecode;
+	}
+
+	List<CodeGenUtils.GenClass> compileMultipleClasses(String input, String className, String packageName) throws Exception {
+		show("*****************");
+		show(input);
+		ILexer lexer = CompilerComponentFactory.getLexer(input);
+		ASTNode ast = CompilerComponentFactory.getParser(lexer).parse();
+		ast.visit(CompilerComponentFactory.getScopeVisitor(), null);
+		ast.visit(CompilerComponentFactory.getTypeInferenceVisitor(), null);
+		List<CodeGenUtils.GenClass> bytecodeList = (List<CodeGenUtils.GenClass>) ast.visit(CompilerComponentFactory.getCodeGenVisitor(className, packageName, ""), null);
+		for (CodeGenUtils.GenClass genClass : bytecodeList) {
+			show(CodeGenUtils.bytecodeToString(genClass.byteCode()));
+		}
+		show("----------------");
+		return bytecodeList;
 	}
 
 
@@ -52,6 +68,13 @@ public class CodeGenTests {
 	Object loadClassAndRunMethod(byte[] bytecode, String className, String methodName, Object[] args) throws Exception {
 		Class<?> testClass = getClass(bytecode, className);
 		return runMethod(testClass,methodName, args);
+	}
+
+	Object loadClassesAndRunMain(List<CodeGenUtils.GenClass> classes, String className) throws Exception{
+		DynamicClassLoader loader = new DynamicClassLoader();
+		Class<?> mainClass = loader.define(classes);
+		Object[] args = new Object[1];
+		return runMethod(mainClass, "main", args);
 	}
 
 	private Method findMethod(String name, Method[] methods) {
@@ -95,12 +118,12 @@ public class CodeGenTests {
 				""";
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
 		
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);
+		loadClassesAndRunMain(classes, className);
 	
 	}
 
@@ -113,12 +136,12 @@ public class CodeGenTests {
 				""";
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);
+		loadClassesAndRunMain(classes, className);
 	}
 	
 	@DisplayName("booleanOut")
@@ -130,12 +153,12 @@ public class CodeGenTests {
 				""";
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);
+		loadClassesAndRunMain(classes, className);
 	}	
 	
 	@DisplayName("statementBlock")
@@ -151,13 +174,13 @@ public class CodeGenTests {
 			""";
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);
+		loadClassesAndRunMain(classes, className);
 	}	
 	
 	@DisplayName("intOps")
@@ -175,12 +198,12 @@ public class CodeGenTests {
 			""";
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);
+		loadClassesAndRunMain(classes, className);
 	}		
 	
 	@DisplayName("intEqOps")
@@ -198,12 +221,12 @@ public class CodeGenTests {
 		
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);
+		loadClassesAndRunMain(classes, className);
 		
 	}
 
@@ -226,12 +249,12 @@ public class CodeGenTests {
 		
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);
+		loadClassesAndRunMain(classes, className);
 		
 	}
 	
@@ -260,12 +283,12 @@ public class CodeGenTests {
 		
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);		
+		loadClassesAndRunMain(classes, className);		
 	}
 	
 	@DisplayName("boolRelOps")
@@ -295,12 +318,12 @@ public class CodeGenTests {
 		
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);		
+		loadClassesAndRunMain(classes, className);		
 	}
 	
 	
@@ -319,12 +342,12 @@ public class CodeGenTests {
 		
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);
+		loadClassesAndRunMain(classes, className);
 		
 	}
 	
@@ -356,12 +379,12 @@ public class CodeGenTests {
 		
 		String shortClassName = "prog";
 		String JVMpackageName = "edu/ufl/cise/plpfa22";
-		byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-		show(CodeGenUtils.bytecodeToString(bytecode));
+		List<CodeGenUtils.GenClass> classes = compileMultipleClasses(input, shortClassName, JVMpackageName);
+		
 		
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
-		loadClassAndRunMethod(bytecode, className, "main", args);		
+		loadClassesAndRunMain(classes, className);		
 	}
 	
 	}

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.TestInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -35,17 +36,19 @@ public class CodeGenTestsGDoc {
     private final PrintStream originalErr = System.err;
 
 
-    byte[] compile(String input, String className, String packageName) throws Exception {
+    List<CodeGenUtils.GenClass> compile(String input, String className, String packageName) throws Exception {
         show("*****************");
         show(input);
         ILexer lexer = CompilerComponentFactory.getLexer(input);
         ASTNode ast = CompilerComponentFactory.getParser(lexer).parse();
         ast.visit(CompilerComponentFactory.getScopeVisitor(), null);
         ast.visit(CompilerComponentFactory.getTypeInferenceVisitor(), null);
-        byte[] bytecode = (byte[]) ast.visit(CompilerComponentFactory.getCodeGenVisitor(className, packageName, ""), null);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+        List<CodeGenUtils.GenClass> bytecodeList = (List<CodeGenUtils.GenClass>) ast.visit(CompilerComponentFactory.getCodeGenVisitor(className, packageName, ""), null);
+        for (CodeGenUtils.GenClass genClass : bytecodeList) {
+            show(CodeGenUtils.bytecodeToString(genClass.byteCode()));
+        }
         show("----------------");
-        return bytecode;
+        return bytecodeList;
     }
 
 
@@ -109,14 +112,13 @@ public class CodeGenTestsGDoc {
 				""";
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
+        List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
 
-        show(CodeGenUtils.bytecodeToString(bytecode));
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				3
 				""";
@@ -125,6 +127,13 @@ public class CodeGenTestsGDoc {
         assertEquals(expected, outContent.toString());
         System.setOut(originalOut);
         System.setErr(originalErr);
+    }
+
+    Object loadClassesAndRunMain(List<CodeGenUtils.GenClass> classes, String className) throws Exception{
+        DynamicClassLoader loader = new DynamicClassLoader();
+        Class<?> mainClass = loader.define(classes);
+        Object[] args = new Object[1];
+        return runMethod(mainClass, "main", args);
     }
 
     @DisplayName("stringOut")
@@ -136,14 +145,13 @@ public class CodeGenTestsGDoc {
 				""";
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				hello world
 				""";
@@ -163,14 +171,14 @@ public class CodeGenTestsGDoc {
 				""";
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				true
 				""";
@@ -194,15 +202,15 @@ public class CodeGenTestsGDoc {
 			""";
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				3
 				false
@@ -230,14 +238,14 @@ public class CodeGenTestsGDoc {
 			""";
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				4
 				4
@@ -267,14 +275,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				false
 				true
@@ -308,14 +316,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				true
 				false
@@ -359,14 +367,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				true
 				true
@@ -415,14 +423,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				true
 				true
@@ -464,14 +472,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				false
 				true
@@ -501,14 +509,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				true
 				false
@@ -535,14 +543,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				true
 				true
@@ -569,14 +577,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				false
 				false
@@ -601,14 +609,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				false
 				true
@@ -631,14 +639,14 @@ public class CodeGenTestsGDoc {
 			""";
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				cdabqw
 				cvdavb
@@ -670,14 +678,14 @@ public class CodeGenTestsGDoc {
 			""";
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				ABC
 				PPP
@@ -709,14 +717,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
             RedBlue
             false
@@ -748,14 +756,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				false
 				false
@@ -782,14 +790,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				Hello World!
 				true
@@ -838,14 +846,14 @@ public class CodeGenTestsGDoc {
 
         String shortClassName = "prog";
         String JVMpackageName = "edu/ufl/cise/plpfa22";
-        byte[] bytecode = compile(input, shortClassName, JVMpackageName);
-        show(CodeGenUtils.bytecodeToString(bytecode));
+         List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        
 
         Object[] args = new Object[1];
         String className = "edu.ufl.cise.plpfa22.prog";
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
-        loadClassAndRunMethod(bytecode, className, "main", args);
+        loadClassesAndRunMain(classes, className);
         String expected = """
 				This is Equal!
 				IF 3 PASSED!
