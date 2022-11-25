@@ -1,20 +1,8 @@
-package asm.edu.ufl.cise.plpfa22;
+package edu.ufl.cise.plpfa22.asmhelpers.output;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.ConstantDynamic;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.RecordComponentVisitor;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.TypePath;
+import org.objectweb.asm.*;
 
-public class TestProcDump implements Opcodes {
+public class TestProcMultiple implements Opcodes {
 
     public static byte[] dump() throws Exception {
 
@@ -24,13 +12,17 @@ public class TestProcDump implements Opcodes {
         MethodVisitor methodVisitor;
         AnnotationVisitor annotationVisitor0;
 
-        classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, "edu/ufl/cise/plpfa22/TestProc", null, "java/lang/Object", new String[]{"java/lang/Runnable"});
+        classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, "edu/ufl/cise/plpfa22/TestProcMultiple", null, "java/lang/Object", new String[]{"java/lang/Runnable"});
 
-        classWriter.visitSource("TestProc.java", null);
+        classWriter.visitSource("TestProcMultiple.java", null);
 
-        classWriter.visitNestMember("edu/ufl/cise/plpfa22/TestProc$p");
+        classWriter.visitNestMember("edu/ufl/cise/plpfa22/TestProcMultiple$p");
 
-        classWriter.visitInnerClass("edu/ufl/cise/plpfa22/TestProc$p", "edu/ufl/cise/plpfa22/TestProc", "p", 0);
+        classWriter.visitNestMember("edu/ufl/cise/plpfa22/TestProcMultiple$p$q");
+
+        classWriter.visitInnerClass("edu/ufl/cise/plpfa22/TestProcMultiple$p", "edu/ufl/cise/plpfa22/TestProcMultiple", "p", 0);
+
+        classWriter.visitInnerClass("edu/ufl/cise/plpfa22/TestProcMultiple$p$q", "edu/ufl/cise/plpfa22/TestProcMultiple$p", "q", 0);
 
         {
             fieldVisitor = classWriter.visitField(0, "a", "I", null, null);
@@ -58,7 +50,7 @@ public class TestProcDump implements Opcodes {
             methodVisitor.visitInsn(RETURN);
             Label label2 = new Label();
             methodVisitor.visitLabel(label2);
-            methodVisitor.visitLocalVariable("this", "Ledu/ufl/cise/plpfa22/TestProc;", null, label0, label2, 0);
+            methodVisitor.visitLocalVariable("this", "Ledu/ufl/cise/plpfa22/TestProcMultiple;", null, label0, label2, 0);
             methodVisitor.visitMaxs(1, 1);
             methodVisitor.visitEnd();
         }
@@ -67,14 +59,14 @@ public class TestProcDump implements Opcodes {
             methodVisitor.visitCode();
             Label label0 = new Label();
             methodVisitor.visitLabel(label0);
-            methodVisitor.visitLineNumber(26, label0);
-            methodVisitor.visitTypeInsn(NEW, "edu/ufl/cise/plpfa22/TestProc");
+            methodVisitor.visitLineNumber(34, label0);
+            methodVisitor.visitTypeInsn(NEW, "edu/ufl/cise/plpfa22/TestProcMultiple");
             methodVisitor.visitInsn(DUP);
-            methodVisitor.visitMethodInsn(INVOKESPECIAL, "edu/ufl/cise/plpfa22/TestProc", "<init>", "()V", false);
-            methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "edu/ufl/cise/plpfa22/TestProc", "run", "()V", false);
+            methodVisitor.visitMethodInsn(INVOKESPECIAL, "edu/ufl/cise/plpfa22/TestProcMultiple", "<init>", "()V", false);
+            methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "edu/ufl/cise/plpfa22/TestProcMultiple", "run", "()V", false);
             Label label1 = new Label();
             methodVisitor.visitLabel(label1);
-            methodVisitor.visitLineNumber(27, label1);
+            methodVisitor.visitLineNumber(35, label1);
             methodVisitor.visitInsn(RETURN);
             Label label2 = new Label();
             methodVisitor.visitLabel(label2);
@@ -87,19 +79,19 @@ public class TestProcDump implements Opcodes {
             methodVisitor.visitCode();
             Label label0 = new Label();
             methodVisitor.visitLabel(label0);
-            methodVisitor.visitLineNumber(31, label0);
-            methodVisitor.visitTypeInsn(NEW, "edu/ufl/cise/plpfa22/TestProc$p");
+            methodVisitor.visitLineNumber(39, label0);
+            methodVisitor.visitTypeInsn(NEW, "edu/ufl/cise/plpfa22/TestProcMultiple$p");
             methodVisitor.visitInsn(DUP);
             methodVisitor.visitVarInsn(ALOAD, 0);
-            methodVisitor.visitMethodInsn(INVOKESPECIAL, "edu/ufl/cise/plpfa22/TestProc$p", "<init>", "(Ledu/ufl/cise/plpfa22/TestProc;)V", false);
-            methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "edu/ufl/cise/plpfa22/TestProc$p", "run", "()V", false);
+            methodVisitor.visitMethodInsn(INVOKESPECIAL, "edu/ufl/cise/plpfa22/TestProcMultiple$p", "<init>", "(Ledu/ufl/cise/plpfa22/TestProcMultiple;)V", false);
+            methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "edu/ufl/cise/plpfa22/TestProcMultiple$p", "run", "()V", false);
             Label label1 = new Label();
             methodVisitor.visitLabel(label1);
-            methodVisitor.visitLineNumber(32, label1);
+            methodVisitor.visitLineNumber(40, label1);
             methodVisitor.visitInsn(RETURN);
             Label label2 = new Label();
             methodVisitor.visitLabel(label2);
-            methodVisitor.visitLocalVariable("this", "Ledu/ufl/cise/plpfa22/TestProc;", null, label0, label2, 0);
+            methodVisitor.visitLocalVariable("this", "Ledu/ufl/cise/plpfa22/TestProcMultiple;", null, label0, label2, 0);
             methodVisitor.visitMaxs(3, 1);
             methodVisitor.visitEnd();
         }

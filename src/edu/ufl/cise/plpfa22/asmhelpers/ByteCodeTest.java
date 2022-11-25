@@ -1,4 +1,4 @@
-package edu.ufl.cise.plpfa22;
+package edu.ufl.cise.plpfa22.asmhelpers;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.util.ASMifier;
@@ -11,13 +11,11 @@ import java.io.PrintWriter;
 public class ByteCodeTest {
 
     public static void main(String[] args) throws IOException {
-        // Creates a FileWriter
-        FileWriter file = new FileWriter("TestProcAsm.java");
+        FileWriter file = new FileWriter("TestProcRec1$p.java");
 
-// Creates a PrintWriter
         PrintWriter output = new PrintWriter(file, true);
 
-        new ClassReader(ByteCodeTest.class.getResourceAsStream("TestProc.class"))
+        new ClassReader(ByteCodeTest.class.getResourceAsStream("TestProcRec1$p.class"))
                 .accept(new TraceClassVisitor(null, new ASMifier(), output), 0);
     }
 

@@ -1,4 +1,4 @@
-package edu.ufl.cise.plpfa22;
+package edu.ufl.cise.plpfa22.asmhelpers;
 
 // Add test case in this class and run Asmifier(ByteCodeTest.java) to get the bytecode instruction
 public class Test2 implements Runnable {

@@ -1,10 +1,9 @@
-package edu.ufl.cise.plpfa22;
+package edu.ufl.cise.plpfa22.asmhelpers;
 
 public class TestProcMultiple implements Runnable {
     int a;
-    String b = "abc";
+    String b;
     boolean c;
-    int e;
 
     public TestProcMultiple() {
         super();
@@ -12,15 +11,13 @@ public class TestProcMultiple implements Runnable {
 
     class p implements Runnable {
 
-        int d = 10;
-        String f;
+
         class q implements Runnable {
             @Override
             public void run() {
                 a = 45;
-                b = "inq";
-                c = false;
-                d = 25;
+                b = "hello";
+                c = true;
                 System.out.println(a);
                 System.out.println(b);
                 System.out.println(c);
@@ -29,12 +26,6 @@ public class TestProcMultiple implements Runnable {
 
         @Override
         public void run() {
-            a = 42;
-            b = "hello";
-            c = true;
-            System.out.println(a);
-            System.out.println(b);
-            System.out.println(c);
             new q().run();
         }
     }

@@ -1,4 +1,4 @@
-package edu.ufl.cise.plpfa22;
+package edu.ufl.cise.plpfa22.asmhelpers;
 
 public class TestProc implements Runnable {
     int a;
