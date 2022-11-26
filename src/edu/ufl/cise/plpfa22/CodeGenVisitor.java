@@ -360,8 +360,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "equals", "(Ljava/lang/Object;)Z", false);
                     }
                     case NEQ -> {
-                        mv.visitJumpInsn(IF_ACMPNE, start);
-                        mv.visitLdcInsn(false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "equals", "(Ljava/lang/Object;)Z", false);
+                        mv.visitMethodInsn(INVOKESTATIC, BOOLEAN_NOT_CLASS, "not", "(Z)Z", false);
                     }
                     case LT -> {
                         mv.visitInsn(Opcodes.SWAP);

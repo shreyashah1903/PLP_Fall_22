@@ -865,6 +865,39 @@ public class CodeGenTestsGDoc {
         System.setErr(originalErr);
     }
 
+    @DisplayName("Test_3")
+    @Test
+    public void ssTest1(TestInfo testInfo) throws Exception {
+
+        String input = """
+        BEGIN
+        ! "Hello "+"World!";
+        ! ("Hello"+" World!") # "Hello World!"
+        END
+                .
+        """;
+
+
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<CodeGenUtils.GenClass> classes = compile(input, shortClassName, JVMpackageName);
+
+
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+        String expected = """
+				Hello World!
+				false
+				""";
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
+
 
 }
 
