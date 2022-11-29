@@ -39,9 +39,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     @Override
     public Object visitBlock(Block block, Object arg) throws PLPException {
         ClassWriter classWriter = (ClassWriter) arg;
+        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "run", "()V", null, null);
 
         for (ConstDec constDec : block.constDecs) {
-            constDec.visit(this, arg);
+            constDec.visit(this, methodVisitor);
         }
         for (VarDec varDec : block.varDecs) {
             varDec.visit(this, arg);
@@ -50,7 +51,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
             procDec.visit(this, CLASS_NAME);
         }
 
-        MethodVisitor methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "run", "()V", null, null);
         methodVisitor.visitCode();
 
         //add instructions from statement to method
@@ -523,9 +523,17 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     public Object visitConstDec(ConstDec constDec, Object arg) throws PLPException {
         Type type = constDec.getType();
         System.out.println("Constdec type" + type);
+
         FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(constDec.ident.getText()),
                 constDec.getJvmType(), null, null);
         fieldVisitor.visitEnd();
+
+        MethodVisitor methodVisitor = (MethodVisitor) arg;
+        // TODO Verify if this is the right way. In ASMifier, this part is done in the init block
+        methodVisitor.visitVarInsn(ALOAD, 0);
+        methodVisitor.visitLdcInsn(constDec.val);
+        methodVisitor.visitFieldInsn(PUTFIELD, CLASS_NAME, String.valueOf(constDec.ident.getText()), constDec.getJvmType());
+
         return null;
     }
 
