@@ -211,8 +211,14 @@ public class TypeChecker implements ASTVisitor {
 
         if (type1 == null && type2 != null) {
             leftExpr.setType(type2);
+            if (leftExpr instanceof ExpressionIdent) {
+                ((ExpressionIdent) leftExpr).getDec().setType(type2);
+            }
         } else if (type1 != null && type2 == null) {
             rightExpr.setType(type1);
+            if (rightExpr instanceof ExpressionIdent) {
+                ((ExpressionIdent) rightExpr).getDec().setType(type1);
+            }
         }
 
         type1 = leftExpr.getType();
