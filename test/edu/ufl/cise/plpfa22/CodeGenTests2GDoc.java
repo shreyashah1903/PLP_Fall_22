@@ -1299,4 +1299,186 @@ public class CodeGenTests2GDoc {
     }
 
 
+
+    @DisplayName("aliyatest1")
+    @Test
+    public void aliyatest1(TestInfo testInfo) throws Exception{
+        String input = """
+            	CONST c1 = 57189, c2 = TRUE, c3 = "hello";
+            	VAR v1, v2, v3;
+            	PROCEDURE p1;
+           		 CONST c1 = TRUE, c3 = 5;
+           		 PROCEDURE p11;
+           			 VAR v1, v2;
+           			 BEGIN
+   	        			 v1 := c1;
+   	        			 !v1
+           			 END
+           		 ;
+           		 BEGIN
+   	        		 v2 := c3;
+   	        		 !v2;
+   	        		 CALL p11
+   	         	END
+            	;
+            	CALL p1
+            	.
+            	""";
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+        String expected = """
+        	5
+        	true
+        	""";
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
+    @DisplayName("aliyatest2")
+    @Test
+    public void aliyatest2(TestInfo testInfo) throws Exception{
+        String input = """
+            	CONST c1 = 571, c2 = TRUE, c3 = "hello";
+            	VAR v1, v2, v3;
+            	PROCEDURE p1;
+           		 
+           		 PROCEDURE p11;
+           			 VAR v1, v2;
+           			 BEGIN
+   	        			 v1 := c1;
+   	        			 v3 := 571 - 560;
+   	        			 //v3 = 11
+   	        			 !v1;
+   	        			 !v3
+           			 END
+           		 ;
+           		 BEGIN
+   	        		 v2 := c3;
+   	        		 !v2;
+   	        		 //immediate child
+   	        		 CALL p11
+   	         	END
+            	;
+            	PROCEDURE p2;
+           		 VAR v1, v2;
+           		 PROCEDURE p21;
+           			 VAR v4;
+           			 PROCEDURE p211;
+   	        			 BEGIN
+   	        				 !v3;
+   	        				 //diff class
+   	        				 CALL p1
+   	        			 END
+           			 ;
+           			 BEGIN
+           				 v4 := v3 + v1;
+           				 !v4;
+           				 v2 := v1 + 1;
+           				 
+           				 //diff class
+           				 CALL p1
+           			 END
+           		 ;
+           		 BEGIN
+           			 v1 := 90;
+           			 !v1;
+           			 CALL p21
+           			 
+           		 END
+            	;
+            	BEGIN    
+           		 CALL p1;
+           		 CALL p2
+            	END
+            	.
+            	""";
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+        String expected = """
+        	hello
+        	571
+        	11
+        	90
+        	101
+        	hello
+        	571
+        	11
+        	""";
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
+    @DisplayName("aliyatest3")
+    @Test
+    public void aliyatest3(TestInfo testInfo) throws Exception{
+        String input = """
+            	VAR flag;
+            	PROCEDURE proc1;
+           		 PROCEDURE proc2;
+           			 PROCEDURE proc3;
+           				 PROCEDURE proc4;
+           					 BEGIN
+   			     				 !"In proc4";
+   			     				 flag := 0;
+   								 CALL proc1
+   							 END
+   						 ;
+   						 BEGIN
+   							 !"In proc3";
+   							 CALL proc4
+   						 END
+   					 ;
+   					 BEGIN
+   						 !"In proc2";
+   						 CALL proc3
+   					 END
+   				 ;
+   			 BEGIN
+   				 !"In proc1";
+   				 IF flag = 1
+   				 THEN CALL proc2
+   			 END
+   			 ;
+   			 BEGIN
+   				 flag := 1;
+   				 CALL proc1
+   			 END
+            	.
+            	""";
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+        String expected = """
+        	In proc1
+        	In proc2
+        	In proc3
+        	In proc4
+        	In proc1
+        	""";
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
+
+
 }
