@@ -957,8 +957,8 @@ void testAssignIntToString(TestInfo testInfo) {
 	@Test
 	void ss_Test12(TestInfo testInfo) throws PLPException {
 		String input = """
-                VAR x, y, z;
                 CONST a = "HELLO";
+                VAR x, y, z;
                 BEGIN
                 	x := "HAHA";
                 	! (a=x);
@@ -1238,6 +1238,70 @@ void testAssignIntToString(TestInfo testInfo) {
 		runTest(input, testInfo);
 
 
+	}
+
+
+	@Test
+	void test_23(TestInfo testInfo) throws PLPException {
+		String input = """
+                 		VAR in, out, count;
+                 		PROCEDURE fib;
+                 		 	VAR t, a, b;
+                 		 	PROCEDURE recursiveCall;
+                 		 		 BEGIN
+                 		 		 	in := t-1;
+                 		 		 	CALL fib;
+                 		 		 	a := out;
+                 		 		 	in := t-2;
+                 		 		 	CALL fib;
+                 		 		 	b := out;
+                 		 		 	out := a + b
+                 		 		 END
+                 		 	;
+                 		 	PROCEDURE baseCase;
+                 		 		 out := t
+                 		 	;
+                 		 	BEGIN
+                 		 		t := in;
+                 		 		IF t <= 1 THEN
+                 		 		 	CALL baseCase
+                 		 		;
+                 		 		IF t > 1 THEN
+                 		 		 	CALL recursiveCall
+                 		 		;
+                 		 	END
+                 		 ;
+                 		 PROCEDURE series;
+                 		 	CONST n = 10, start = 1;
+                 		 	VAR i;
+                 		 	PROCEDURE incI;
+                 		 		 CONST incVal = 1;
+                 		 		 i := i+incVal
+                 		 	;
+                 		 	PROCEDURE printOut;
+                 		 		 ! out
+                 		 	;
+                 		 	BEGIN
+                 		 		count := "10";
+                 		 		i := start;
+                 		 		WHILE i <= n DO
+                 		 		 	BEGIN
+                 		 		 		 in := i;
+                 		 		 		 CALL fib;
+                 		 		 		 CALL printOut;
+                 		 		 		 CALL incI;
+                 		 		 	END
+                 		 		;
+                 		 		CALL printMessage
+                 		 	END
+                 		 ;
+                 		 PROCEDURE printMessage;
+                 		 	! "printed first " + count + " fib series"
+                 		 ;
+                 		 CALL series
+                .
+                """;
+		runTest(input, testInfo);
 	}
 
 }
