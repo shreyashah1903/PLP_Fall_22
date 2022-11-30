@@ -96,15 +96,15 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 //		return bytes;
     }
 
-    private static void annotateProcedureDec(Block block, String className, String classDesc) {
+    private void annotateProcedureDec(Block block, String cName, String cDesc) {
         for (ProcDec procDec : block.procedureDecs) {
             System.out.println("ProcDec");
             String ident = String.valueOf(procDec.ident.getText());
 
-            procDec.setParentClassName(className);
-            className = className + "$" + ident;
+            procDec.setParentClassName(cName);
+            String className = cName + "$" + ident;
 
-            classDesc = classDesc + "$" + ident + ";";
+            String classDesc = cDesc + "$" + ident + ";";
 
             System.out.println("annotateProcedureDec ChildClass:"+className + " Parentclass:"+procDec.getParentClassName());
 
@@ -124,11 +124,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
             if (!block1.procedureDecs.isEmpty()) {
                 annotateProcedureDec(block1, className, classDesc.substring(0, classDesc.length() - 1));
-            }
-            String[] classes = className.split("\\$");
-            if (classes.length > 1) {
-                className = classes[0];
-                classDesc = classDesc.split("\\$")[0];
             }
         }
     }
