@@ -1990,4 +1990,22 @@ class ParserTest {
 		assertThat("", statements.get(6), instanceOf(StatementAssign.class));
 	}
 
+	// Should throw and exception if VAR is defined before CONST
+	// TODO: SIJU Check this once
+	@Test
+	void test__44() throws PLPException {
+		String input = """
+    			VAR a,b,c,d,e,f,g;
+				CONST n=42, s="this is a string", x=TRUE;
+				BEGIN
+				a := 4;
+				END
+				.
+				""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
 }
