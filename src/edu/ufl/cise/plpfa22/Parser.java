@@ -51,81 +51,70 @@ public class Parser implements IParser {
         List<VarDec> varDecs = new ArrayList<>();
         List<ProcDec> procedureDecs = new ArrayList<>();
         Statement statement = null;
-        while (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
-            switch (token.getKind()) {
-                case KW_CONST -> {
-                    while(token.getKind() == IToken.Kind.KW_CONST) {
-                        consume();
-                        IToken ident;
-                        do {
-                            if (token.getKind() == IToken.Kind.IDENT) {
-                                ident = token;
-                                consume();
-                                match(IToken.Kind.EQ);
-                                consume();
-                                switch (token.getKind()) {
-                                    case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, token.getIntValue()));
-                                    case STRING_LIT ->
-                                            constDecs.add(new ConstDec(firstToken, ident, token.getStringValue()));
-                                    case BOOLEAN_LIT ->
-                                            constDecs.add(new ConstDec(firstToken, ident, token.getBooleanValue()));
-                                    default -> throw new SyntaxException();
-                                }
-                                consume();
-                                if (token.getKind() == IToken.Kind.COMMA) consume();
-                            } else {
-                                throw new SyntaxException();
-                            }
-                        } while (token.getKind() != IToken.Kind.SEMI);
-                        consume();
-                    }
-                }
-                case KW_VAR -> {
-                    while(token.getKind() == IToken.Kind.KW_VAR) {
-                        consume();
-                        if (token.getKind() != IToken.Kind.IDENT) {
-                            throwSyntaxException("Expected IDENT after VAR", token);
-                        }
-                        while (token.getKind() != IToken.Kind.SEMI) {
-                            IToken.Kind kind = token.getKind();
 
-                            if (kind == IToken.Kind.IDENT) {
-                                varDecs.add(new VarDec(firstToken, token));
-                                consume();
-                            }
-
-                            if (token.getKind() != IToken.Kind.SEMI && token.getKind() != IToken.Kind.COMMA) {
-                                throwSyntaxException("Expected COMMA, SEMI after VAR IDENT declaration", token);
-                            }
-                            if (token.getKind() != IToken.Kind.SEMI) {
-                                consume();
-                            }
-                        }
-                        consume();
+        while(token.getKind() == IToken.Kind.KW_CONST) {
+            consume();
+            IToken ident;
+            do {
+                if (token.getKind() == IToken.Kind.IDENT) {
+                    ident = token;
+                    consume();
+                    match(IToken.Kind.EQ);
+                    consume();
+                    switch (token.getKind()) {
+                        case NUM_LIT -> constDecs.add(new ConstDec(firstToken, ident, token.getIntValue()));
+                        case STRING_LIT ->
+                                constDecs.add(new ConstDec(firstToken, ident, token.getStringValue()));
+                        case BOOLEAN_LIT ->
+                                constDecs.add(new ConstDec(firstToken, ident, token.getBooleanValue()));
+                        default -> throw new SyntaxException();
                     }
+                    consume();
+                    if (token.getKind() == IToken.Kind.COMMA) consume();
+                } else {
+                    throw new SyntaxException();
                 }
-                case KW_PROCEDURE -> {
-                    while(token.getKind() == IToken.Kind.KW_PROCEDURE) {
-                        consume();
-                        match(IToken.Kind.IDENT);
-                        if (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
-                            IToken ident = token;
-                            consume();
-                            match(IToken.Kind.SEMI);
-                            consume();
-                            Block block = handleBlock(token);
-                            match(IToken.Kind.SEMI);
-                            consume();
-                            procedureDecs.add(new ProcDec(firstToken, ident, block));
-                        }
-                    }
-                }
-                default -> statement = handleStatement(startToken);
+            } while (token.getKind() != IToken.Kind.SEMI);
+            consume();
+        }
+        while(token.getKind() == IToken.Kind.KW_VAR) {
+            consume();
+            if (token.getKind() != IToken.Kind.IDENT) {
+                throwSyntaxException("Expected IDENT after VAR", token);
             }
-            if (statement != null) {
-                break;
+            while (token.getKind() != IToken.Kind.SEMI) {
+                IToken.Kind kind = token.getKind();
+
+                if (kind == IToken.Kind.IDENT) {
+                    varDecs.add(new VarDec(firstToken, token));
+                    consume();
+                }
+
+                if (token.getKind() != IToken.Kind.SEMI && token.getKind() != IToken.Kind.COMMA) {
+                    throwSyntaxException("Expected COMMA, SEMI after VAR IDENT declaration", token);
+                }
+                if (token.getKind() != IToken.Kind.SEMI) {
+                    consume();
+                }
+            }
+            consume();
+        }
+        while(token.getKind() == IToken.Kind.KW_PROCEDURE) {
+            consume();
+            match(IToken.Kind.IDENT);
+            if (token.getKind() != IToken.Kind.DOT && token.getKind() != IToken.Kind.EOF) {
+                IToken ident = token;
+                consume();
+                match(IToken.Kind.SEMI);
+                consume();
+                Block block = handleBlock(token);
+                match(IToken.Kind.SEMI);
+                consume();
+                procedureDecs.add(new ProcDec(firstToken, ident, block));
             }
         }
+        statement = handleStatement(startToken);
+
         if (statement == null) {
             statement = new StatementEmpty(startToken);
         }
