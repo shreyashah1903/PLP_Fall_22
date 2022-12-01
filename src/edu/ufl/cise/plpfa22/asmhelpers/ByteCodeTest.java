@@ -11,11 +11,11 @@ import java.io.PrintWriter;
 public class ByteCodeTest {
 
     public static void main(String[] args) throws IOException {
-        FileWriter file = new FileWriter("TestProcRec1$p.java");
+        FileWriter file = new FileWriter("TestConstantsDump.java");
 
         PrintWriter output = new PrintWriter(file, true);
 
-        new ClassReader(ByteCodeTest.class.getResourceAsStream("TestProcRec1$p.class"))
+        new ClassReader(ByteCodeTest.class.getResourceAsStream("TestConstants.class"))
                 .accept(new TraceClassVisitor(null, new ASMifier(), output), 0);
     }
 

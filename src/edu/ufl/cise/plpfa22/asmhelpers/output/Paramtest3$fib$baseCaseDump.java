@@ -1,4 +1,4 @@
-package asm.edu.ufl.cise.plpfa22.asmhelpers;
+package edu.ufl.cise.plpfa22.asmhelpers.output;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassReader;
