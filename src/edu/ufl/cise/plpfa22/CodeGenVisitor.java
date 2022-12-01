@@ -97,7 +97,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     private void annotateProcedureDec(Block block, String cName, String cDesc) {
         for (ProcDec procDec : block.procedureDecs) {
-            System.out.println("ProcDec");
             String ident = String.valueOf(procDec.ident.getText());
 
             procDec.setParentClassName(cName);
@@ -105,7 +104,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
             String classDesc = cDesc + "$" + ident + ";";
 
-            System.out.println("annotateProcedureDec ChildClass:"+className + " Parentclass:"+procDec.getParentClassName());
+            LogHelper.printOutput("annotateProcedureDec ChildClass:"+className + " Parentclass:"+procDec.getParentClassName());
 
             procDec.setJvmType(className);
             procDec.setClassName(className);
@@ -183,7 +182,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         Type type = varDec.getType();
         ClassWriter classWriter = (ClassWriter)arg;
 
-        System.out.println("Vardec type" + type);
         if (type != null)  {
             FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(varDec.ident.getText()),
                     varDec.getJvmType(), null, null);
@@ -418,7 +416,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     @Override
     public Object visitExpressionIdent(ExpressionIdent expressionIdent, Object arg) throws PLPException {
-        System.out.println("VisitExpIdent:" + expressionIdent.getDec().getType());
+        LogHelper.printOutput("VisitExpIdent:" + expressionIdent.getDec().getType());
         MethodVisitor methodVisitor = (MethodVisitor) arg;
         methodVisitor.visitVarInsn(ALOAD, 0);
         String name;
@@ -426,7 +424,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
             name = String.valueOf(((ConstDec) expressionIdent.getDec()).ident.getText());
         } else {
             name = String.valueOf(((VarDec) expressionIdent.getDec()).ident.getText());
-            System.out.println("ExpressionIdent Name:" + name);
+            LogHelper.printOutput("ExpressionIdent Name:" + name);
         }
         int identNestLevel = expressionIdent.getNest();
         int decNestLevel = expressionIdent.getDec().getNest();
@@ -519,7 +517,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         ClassWriter classWriter = classAndMethodWriter.getClassWriter();
         MethodVisitor methodVisitor = classAndMethodWriter.getMethodVisitor();
 
-        System.out.println("Constdec ident" + Arrays.toString(constDec.ident.getText()) + " classWriter:"+classWriter);
+        LogHelper.printOutput("Constdec ident" + Arrays.toString(constDec.ident.getText()) + " classWriter:"+classWriter);
 
         FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, String.valueOf(constDec.ident.getText()),
                 constDec.getJvmType(), null, null);
@@ -543,7 +541,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLPException {
 
-        System.out.println("visitIdent:" + Arrays.toString(ident.getText()) + " nest:"+ident.getNest() + "dec nest:"+ident.getDec().getNest());
+        LogHelper.printOutput("visitIdent:" + Arrays.toString(ident.getText()) + " nest:"+ident.getNest() + "dec nest:"+ident.getDec().getNest());
         MethodVisitor methodVisitor = (MethodVisitor) arg;
 
         String name = String.valueOf(((VarDec) ident.getDec()).ident.getText());
@@ -562,7 +560,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
         methodVisitor.visitInsn(SWAP);
 
-        System.out.println("Ident Name:" + name);
+        LogHelper.printOutput("Ident Name:" + name);
 
         methodVisitor.visitFieldInsn(PUTFIELD, classNameList.get(identNestLevel), name, jvmType);
         return null;
