@@ -1586,6 +1586,87 @@ public class CodeGenTests2GDoc {
     }
 
 
+    @DisplayName("shreyatest2")
+    @Test
+    public void testGCD(TestInfo testInfo) throws Exception {
+        String input = """
+            	VAR i, n, out, a, b;
+            	PROCEDURE gcd;
+            	    PROCEDURE recursiveCall1;
+            	        BEGIN
+            	            a := a-b;
+            	            CALL gcd;
+            	        END
+            	    ;
+            	    PROCEDURE recursiveCall2;
+            	        BEGIN
+            	            b := b-a;
+            	            CALL gcd;
+            	        END
+            	    ;
+            	    PROCEDURE baseCase;
+            	        out := 0
+            	    ;
+            	    PROCEDURE baseCase1;
+            	        out := a
+            	    ;
+            	    BEGIN
+            	        IF ((a = 0) + (b = 0)) THEN
+            	            CALL baseCase
+            	        ;
+            	        IF ((a = b) * (a # 0)) THEN
+            	            CALL baseCase1
+            	        ;
+            	        IF a > b THEN
+            	            CALL recursiveCall1
+            	        ;
+            	        IF a < b THEN
+            	            CALL recursiveCall2
+            	        ;
+            	    END
+            	;
+            	PROCEDURE result;
+            	    ! out
+            	;
+            	PROCEDURE getGCD;
+            	    BEGIN
+            	        out := 1;
+            	        CALL gcd;
+            	        CALL result
+            	    END
+            	;
+            	BEGIN
+            	    a := 5;
+            	    b := 3;
+            	    CALL getGCD;
+            	    a := 24;
+            	    b := 36;
+            	    CALL getGCD;
+            	    a := 36;
+            	    b := 36;
+            	    CALL getGCD;
+            	END
+            	.
+            	""";
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+        String expected = """
+         1
+         12
+         36
+         """;
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
+
 
 
 }
