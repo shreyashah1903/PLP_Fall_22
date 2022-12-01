@@ -93,7 +93,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
         byte[] bytes = classWriter.toByteArray();
         bytecodeList.add(0, new CodeGenUtils.GenClass(CLASS_NAME, bytes));
         return bytecodeList;
-//		return bytes;
     }
 
     private void annotateProcedureDec(Block block, String cName, String cDesc) {
@@ -464,7 +463,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     @Override
     public Object visitProcedure(ProcDec procDec, Object arg) throws PLPException {
-        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES); //TODO Replace with COMPUTE_FRAMES
+        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         classWriter.visit(V18, ACC_PUBLIC | ACC_SUPER, procDec.getJvmType(), null, "java/lang/Object", new String[]{"java/lang/Runnable"});
 
         String parentDesc = "L" + classNameList.get(classNameList.size() - 1) + ';';
