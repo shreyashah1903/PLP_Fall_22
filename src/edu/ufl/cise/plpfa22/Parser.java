@@ -184,7 +184,13 @@ public class Parser implements IParser {
                 consume();
                 statement = new StatementAssign(startToken, new Ident(ident), handleExpression(startToken));
             }
-            default -> statement = new StatementEmpty(startToken);
+            case SEMI, KW_END, DOT -> {
+                statement = new StatementEmpty(startToken);
+            }
+            default -> {
+                throwSyntaxException("Invalid statement", token);
+                statement = new StatementEmpty(startToken);
+            }
         }
         return statement;
     }

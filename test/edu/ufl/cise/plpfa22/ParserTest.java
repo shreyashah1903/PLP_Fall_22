@@ -2032,4 +2032,28 @@ class ParserTest {
 		});
 	}
 
+	@Test
+	void test__46() throws PLPException {
+		String input = """
+				CONST a=3;
+				VAR x,y,z;
+				PROCEDURE p;
+                    VAR j;
+                    BEGIN
+                        ! j ;
+                        WHILE j > 24 DO THEN z:=5
+                    END
+                    ;
+                BEGIN   
+                CALL p
+				! z
+				END
+				.
+				""";
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			ASTNode ast = getAST(input);
+		});
+	}
+
 }
