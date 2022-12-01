@@ -2018,7 +2018,7 @@ class ParserTest {
                     VAR j;
                     BEGIN
                         ! j ;
-                        IF j > 24 THEN z:=5;
+                        IF j > 24 THEN DO z:=5;
                     END
                     ;
                 BEGIN   
@@ -2042,7 +2042,7 @@ class ParserTest {
                     VAR j;
                     BEGIN
                         ! j ;
-                        WHILE j > 24 DO z:=5
+                        WHILE j > 24 DO THEN z:=5
                     END
                     ;
                 BEGIN   
