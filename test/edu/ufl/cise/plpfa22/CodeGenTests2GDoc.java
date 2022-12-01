@@ -1548,4 +1548,42 @@ public class CodeGenTests2GDoc {
         System.setErr(originalErr);
     }
 
+    @DisplayName("sijutest1")
+    @Test
+    public void testUnassignedVar(TestInfo testInfo) throws Exception {
+        String input = """
+				CONST a=3;
+				VAR x,y,z;
+				PROCEDURE p;
+                    VAR j;
+                    BEGIN
+                        j := 5;
+                        !j ;  // Why it doesn't print?
+                        WHILE j < 24 DO z:=5
+                    END
+                    ;
+				! z
+				.
+				""";
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+        String expected = """
+        	5
+        	0
+        	""";
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+
+    }
+
+
+
+
 }
