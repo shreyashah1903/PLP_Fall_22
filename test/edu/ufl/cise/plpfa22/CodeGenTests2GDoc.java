@@ -1557,12 +1557,14 @@ public class CodeGenTests2GDoc {
 				PROCEDURE p;
                     VAR j;
                     BEGIN
-                        j := 5;
-                        !j ;  // Why it doesn't print?
-                        WHILE j < 24 DO z:=5
+                        ! j ;
+                        IF j > 10 THEN z:=5
                     END
                     ;
-				! z
+                BEGIN   
+                    CALL p
+				    ! z
+				END
 				.
 				""";
         String shortClassName = "prog";
@@ -1574,7 +1576,7 @@ public class CodeGenTests2GDoc {
         System.setErr(new PrintStream(errContent));
         loadClassesAndRunMain(classes, className);
         String expected = """
-        	5
+        	0
         	0
         	""";
         assertEquals(expected, outContent.toString());
