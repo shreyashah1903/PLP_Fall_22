@@ -1480,5 +1480,72 @@ public class CodeGenTests2GDoc {
     }
 
 
+    @DisplayName("shreyatest1")
+    @Test
+    public void testFactorial(TestInfo testInfo) throws Exception {
+        String input = """
+            	VAR i, n, out;
+            	PROCEDURE fact;
+            	    PROCEDURE recursiveCall;
+            	        PROCEDURE decN;
+                 		    CONST decVal = 1;
+                 		    BEGIN
+                                n := n-decVal;
+                                CALL fact
+                 		 	END
+                 		;
+            	        BEGIN
+            	            out := out * n;
+            	            CALL decN
+            	        END
+            	    ;
+            	    PROCEDURE baseCase;
+            	    ;
+            	    BEGIN
+            	        IF n > 0 THEN
+            	            CALL recursiveCall
+            	        ;
+            	        IF n <= 0 THEN
+            	            CALL baseCase
+            	        ;
+            	    END
+            	;
+            	PROCEDURE result;
+            	    ! out
+            	;
+            	PROCEDURE genFact;
+            	    BEGIN
+            	        out := 1;
+            	        CALL fact;
+            	        CALL result
+            	    END
+            	;
+            	BEGIN
+            	    n := 5;
+            	    CALL genFact;
+            	    n := 0;
+            	    CALL genFact;
+            	    n := 4;
+            	    CALL genFact;
+            	END
+            	.
+            	""";
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+        String expected = """
+         120
+         1
+         24
+         """;
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
 
 }
