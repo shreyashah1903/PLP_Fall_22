@@ -3,9 +3,9 @@
  */
 
 
-package edu.ufl.cise.plpfa22;
+package edu.ufl.cise.plpfa22.ast;
 
-import edu.ufl.cise.plpfa22.ast.*;
+import edu.ufl.cise.plpfa22.PLPException;
 import edu.ufl.cise.plpfa22.ast.Types.Type;
 
 public class PrettyPrintVisitor implements ASTVisitor {

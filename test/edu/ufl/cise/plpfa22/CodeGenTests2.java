@@ -7,6 +7,7 @@ package edu.ufl.cise.plpfa22;
 import edu.ufl.cise.plpfa22.CodeGenUtils.DynamicClassLoader;
 import edu.ufl.cise.plpfa22.CodeGenUtils.GenClass;
 import edu.ufl.cise.plpfa22.ast.ASTNode;
+import edu.ufl.cise.plpfa22.ast.PrettyPrintVisitor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
