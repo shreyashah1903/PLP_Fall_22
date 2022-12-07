@@ -1666,6 +1666,59 @@ public class CodeGenTests2GDoc {
         System.setErr(originalErr);
     }
 
+    // TODO @Sh -> Verify if it's correct output
+    @DisplayName("test13")
+    @Test
+    public void test13(TestInfo testInfo) throws Exception{
+        String input = """
+			CONST int="int", string="string", false=FALSE;
+			VAR true;
+			PROCEDURE p;
+				VAR int;
+				BEGIN
+					int :="int";
+					true:=TRUE;
+					int:=int;
+					WHILE (true = TRUE)
+					DO
+						BEGIN 
+							int:=int+int;
+							IF false >= FALSE
+							THEN
+								BEGIN
+									true:= false;
+									!"TRUE 1"
+								END;
+								
+							IF false # FALSE
+							THEN 
+								BEGIN
+									true:= TRUE;
+									!"TRUE 2"
+								END
+						END
+				END;
+			CALL p
+			.
+			""";
+
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+
+        String expected = """
+         TRUE 1
+         """;
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
+
 
 
 
