@@ -630,7 +630,51 @@ public class CodeGenTests2 {
 		Object[] args = new Object[1];  
 		String className = "edu.ufl.cise.plpfa22.prog";
 		loadClassesAndRunMain(classes, className);		
-	}	
+	}
+
+	// TODO Verify the output as well
+	@DisplayName("template")
+	@Test
+	public void test13(TestInfo testInfo) throws Exception{
+		String input = """
+			CONST int="int", string="string", false=FALSE;
+			VAR true;
+			PROCEDURE p;
+				VAR int;
+				BEGIN
+					int :="int";
+					true:=TRUE;
+					int:=int;
+					WHILE (true = TRUE)
+					DO
+						BEGIN 
+							int:=int+int;
+							IF false >= FALSE
+							THEN
+								BEGIN
+									true:= false;
+									!"TRUE 1"
+								END;
+								
+							IF false # FALSE
+							THEN 
+								BEGIN
+									true:= TRUE;
+									!"TRUE 2"
+								END
+						END
+				END;
+			CALL p
+			.
+			""";
+
+		String shortClassName = "prog";
+		String JVMpackageName = "edu/ufl/cise/plpfa22";
+		List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+		Object[] args = new Object[1];
+		String className = "edu.ufl.cise.plpfa22.prog";
+		loadClassesAndRunMain(classes, className);
+	}
 	
 
 
