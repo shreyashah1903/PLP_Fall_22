@@ -1671,29 +1671,29 @@ public class CodeGenTests2GDoc {
     @Test
     public void test13(TestInfo testInfo) throws Exception{
         String input = """
-			CONST int="int", string="string", false=FALSE;
-			VAR true;
+			CONST int="int", string="string", false1=FALSE;
+			VAR true1;
 			PROCEDURE p;
 				VAR int;
 				BEGIN
 					int :="int";
-					true:=TRUE;
+					true1:=TRUE;
 					int:=int;
-					WHILE (true = TRUE)
+					WHILE (true1 = TRUE)
 					DO
 						BEGIN 
 							int:=int+int;
-							IF false >= FALSE
+							IF false1 >= FALSE
 							THEN
 								BEGIN
-									true:= false;
+									true1:= false;
 									!"TRUE 1"
 								END;
 								
-							IF false # FALSE
+							IF false1 # FALSE
 							THEN 
 								BEGIN
-									true:= TRUE;
+									true1:= TRUE;
 									!"TRUE 2"
 								END
 						END
