@@ -257,7 +257,7 @@ public class Lexer implements ILexer {
                     if (reservedWords.containsKey(token)) {
                         createToken(reservedWords.get(token), startPos - len, len, colNum - len);
                     }
-                    else if (token.equalsIgnoreCase("true") || token.equalsIgnoreCase("false")) {
+                    else if (token.equals("TRUE") || token.equals("FALSE")) {
                         createToken(IToken.Kind.BOOLEAN_LIT, startPos - len, len, colNum - len);
                     }
                     else {
