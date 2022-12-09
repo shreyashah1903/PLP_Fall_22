@@ -217,7 +217,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
     @Override
     public Object visitStatementInput(StatementInput statementInput, Object arg) throws PLPException {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override

@@ -1719,7 +1719,38 @@ public class CodeGenTests2GDoc {
         System.setErr(originalErr);
     }
 
-
+    @DisplayName("shreyatest3")
+    @Test
+    public void testStatementInput(TestInfo testInfo) throws Exception{
+        String input = """
+            CONST a = 3, b = "hey!", c = TRUE;
+            VAR d,e,f;
+            BEGIN
+            ! a;
+            ! b;
+            ! c;
+            ? d;
+            d := 2
+            END
+            .
+            """;
+        String shortClassName = "prog";
+        String JVMpackageName = "edu/ufl/cise/plpfa22";
+        List<GenClass> classes = compile(input, shortClassName, JVMpackageName);
+        Object[] args = new Object[1];
+        String className = "edu.ufl.cise.plpfa22.prog";
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+        loadClassesAndRunMain(classes, className);
+        String expected = """
+         3
+         hey!
+         true
+         """;
+        assertEquals(expected, outContent.toString());
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
 
 
 }
